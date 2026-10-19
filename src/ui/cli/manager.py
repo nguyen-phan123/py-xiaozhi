@@ -31,7 +31,7 @@ class CliViewManager:
 
         # 状态
         self._auto_mode = False
-        self._status = "待命"
+        self._status = "Chờ lệnh"
         self._connected = False
         self._chat_text = ""
         self._music_line = ""
@@ -48,7 +48,7 @@ class CliViewManager:
         Args:
             mode: 运行模式（CLI 模式下忽略此参数）
         """
-        logger.info("CliViewManager: 启动 CLI 界面...")
+        logger.info("CliViewManager: Khởi động giao diện CLI...")
         self._running = True
         self._loop = asyncio.get_running_loop()
 
@@ -56,14 +56,14 @@ class CliViewManager:
         try:
             await self._display.start()
         except asyncio.CancelledError:
-            logger.info("CliViewManager: 显示任务被取消")
+            logger.info("CliViewManager: Tác vụ hiển thị bị hủy")
 
     async def close(self):
         """关闭 CLI 视图."""
-        logger.info("CliViewManager: 正在关闭...")
+        logger.info("CliViewManager: Đang đóng...")
         self._running = False
         await self._display.close()
-        logger.info("CliViewManager: 已关闭")
+        logger.info("CliViewManager: Đã đóng")
 
     def _handle_command(self, cmd: str):
         """处理用户命令 - 统一入口."""
@@ -102,7 +102,7 @@ class CliViewManager:
                 return
             except Exception as e:
                 logger.error(
-                    f"CliViewManager 经 TaskManager 调度事件 {event} 失败: {e}",
+                    f"CliViewManager qua TaskManager điều phối sự kiện {event} thất bại: {e}",
                     exc_info=True,
                 )
 
@@ -119,13 +119,13 @@ class CliViewManager:
                     return
                 if exc:
                     logger.error(
-                        f"CliViewManager 发射事件 {event} 失败: {exc}",
+                        f"CliViewManager phát sự kiện {event} thất bại: {exc}",
                         exc_info=exc,
                     )
 
             fut.add_done_callback(_done)
         except Exception as e:
-            logger.error(f"CliViewManager 调度事件 {event} 失败: {e}", exc_info=True)
+            logger.error(f"CliViewManager điều phối sự kiện {event} thất bại: {e}", exc_info=True)
             if asyncio.iscoroutine(coro):
                 coro.close()
 

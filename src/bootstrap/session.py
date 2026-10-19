@@ -1,7 +1,7 @@
-"""会话控制：听/说状态机与协议发送.
+"""Điều khiển phiên hội thoại: State machine nghe/nói và gửi tin qua giao thức.
 
-与 UI 侧 SessionActions（按钮文案/模式）分离：这里只负责 connect /
-listen / abort / TTS 回环等应用级会话逻辑。
+Tách biệt với SessionActions phía UI (nút bấm/chế độ): ở đây chỉ chịu trách nhiệm về logic phiên hội thoại cấp ứng dụng như connect /
+listen / abort / TTS loop.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ logger = get_logger()
 
 
 class ConversationSession:
-    """应用级会话控制器."""
+    """Bộ điều khiển phiên hội thoại cấp ứng dụng."""
 
     def __init__(
         self,
@@ -36,19 +36,19 @@ class ConversationSession:
         self.plugins = plugins
         self._event_bus = event_bus
         self._aborted = False
-        # MCP 工具配置重连等：通道打开后保持 IDLE，不自动进入聆听
+        # Kết nối lại cấu hình MCP tool v.v.: sau khi mở kênh thì giữ IDLE, không tự động chuyển sang lắng nghe
         self._keep_idle_on_channel_open = False
 
     # -------------------------
-    # 事件订阅
+    # Đăng ký sự kiện
     # -------------------------
     def bind_events(self, event_bus: "EventBus") -> None:
-        """订阅协议/状态相关事件（可重复调用，以最后一次为准）."""
+        """Đăng ký các sự kiện liên quan đến giao thức/trạng thái (có thể gọi lặp lại, lấy lần gọi cuối làm chuẩn)."""
         self._event_bus = event_bus
         event_bus.on(Events.AUDIO_CHANNEL_OPENED, self._on_audio_channel_opened)
         event_bus.on(Events.AUDIO_CHANNEL_CLOSED, self._on_audio_channel_closed)
         event_bus.on(Events.INCOMING_JSON, self._on_incoming_json)
-        # 注意：INCOMING_AUDIO 走直连通道，不再通过 EventBus
+        # Lưu ý: INCOMING_AUDIO đi qua kênh truyền trực tiếp, không qua EventBus nữa
         event_bus.on(Events.NETWORK_ERROR, self._on_network_error)
         event_bus.on(Events.DEVICE_STATE_CHANGED, self._on_device_state_changed)
         event_bus.on(
@@ -56,14 +56,14 @@ class ConversationSession:
         )
 
     # -------------------------
-    # 事件处理器
+    # Bộ xử lý sự kiện
     # -------------------------
     async def _on_audio_channel_opened(self, _=None) -> None:
         if self._keep_idle_on_channel_open:
             self._keep_idle_on_channel_open = False
             self.state.set_keep_listening(False)
             await self.state.set_device_state(DeviceState.IDLE)
-            logger.info("协议通道已打开（配置重连）：保持空闲，不进入聆听")
+            logger.info("Kênh giao thức đã mở (kết nối lại cấu hình): giữ trạng thái chờ, không vào lắng nghe")
             return
         await self.state.set_device_state(DeviceState.LISTENING)
 
@@ -71,13 +71,13 @@ class ConversationSession:
         await self.state.set_device_state(DeviceState.IDLE)
 
     async def _on_network_error(self, error_message: str = None) -> None:
-        """网络错误：停止持续监听并复位设备状态到 IDLE."""
+        """Lỗi mạng: Dừng lắng nghe liên tục và reset trạng thái thiết bị về IDLE."""
         self.state.set_keep_listening(False)
         try:
             if not self.state.is_idle():
                 await self.state.set_device_state(DeviceState.IDLE)
         except Exception as e:
-            logger.error(f"网络错误后复位设备状态失败: {e}", exc_info=True)
+            logger.error(f"Khôi phục trạng thái thiết bị sau lỗi mạng thất bại: {e}", exc_info=True)
 
     async def _on_device_state_changed(self, data: dict) -> None:
         new_state = data.get("new_state")
@@ -89,7 +89,7 @@ class ConversationSession:
     async def _on_incoming_json(self, json_data: dict) -> None:
         try:
             msg_type = json_data.get("type") if isinstance(json_data, dict) else None
-            logger.info(f"收到JSON消息: type={msg_type}")
+            logger.info(f"Nhận tin nhắn JSON: type={msg_type}")
 
             if msg_type == "tts":
                 state = json_data.get("state")
@@ -101,7 +101,7 @@ class ConversationSession:
             await self.plugins.notify_incoming_json(json_data)
 
         except Exception as e:
-            logger.error(f"处理 JSON 消息失败: {e}", exc_info=True)
+            logger.error(f"Xử lý tin nhắn JSON thất bại: {e}", exc_info=True)
 
     async def _handle_tts_start(self) -> None:
         if (
@@ -113,35 +113,35 @@ class ConversationSession:
             await self.state.set_device_state(DeviceState.SPEAKING)
 
     async def _handle_tts_stop(self) -> None:
-        # 还要继续听的话，尽量先发 listen，再清队列、改状态
+        # Nếu vẫn tiếp tục nghe thì cố gắng gửi listen trước, rồi mới xóa queue và đổi trạng thái
         if not self.state.keep_listening:
             await self.state.set_device_state(DeviceState.IDLE)
             return
 
-        # realtime 一般还在 listen 里，不用再发一遍
+        # realtime thường vẫn đang trong trạng thái listen, không cần gửi lại
         if self.state.listening_mode != ListeningMode.REALTIME:
             if self.protocol.is_audio_channel_opened():
                 try:
                     await self.protocol.send_start_listening(self.state.listening_mode)
                 except Exception as e:
                     logger.warning(
-                        f"TTS 结束后重新 listen 失败: {e}",
+                        f"Lắng nghe lại sau khi kết thúc TTS thất bại: {e}",
                         exc_info=True,
                     )
             else:
-                logger.warning("TTS 结束但协议通道已关闭，跳过重新 listen")
+                logger.warning("TTS kết thúc nhưng kênh giao thức đã đóng, bỏ qua lắng nghe lại")
 
         try:
             audio_plugin = self.plugins.get_plugin("audio")
             if audio_plugin and audio_plugin.codec:
                 await audio_plugin.codec.clear_audio_queue()
         except Exception as e:
-            logger.warning(f"清空音频队列失败: {e}", exc_info=True)
+            logger.warning(f"Xóa hàng đợi âm thanh thất bại: {e}", exc_info=True)
 
         await self.state.set_device_state(DeviceState.LISTENING)
 
     # -------------------------
-    # 操作方法
+    # Phương thức thao tác
     # -------------------------
     async def connect_protocol(self) -> bool:
         if self.protocol.is_audio_channel_opened():
@@ -153,16 +153,16 @@ class ConversationSession:
         return opened
 
     async def _on_protocol_reconnect_request(self, _=None) -> None:
-        """设置保存后 MCP 工具列表变更：已连接则断开并重连，便于服务端重新 list.
+        """Danh sách MCP tool thay đổi sau khi lưu cài đặt: nếu đã kết nối thì ngắt và kết nối lại để server list lại.
 
-        仅刷新协议/工具视图，不恢复聆听会话（避免保存设置后进入「聆听中」）。
+        Chỉ làm mới giao thức / góc nhìn công cụ, không khôi phục phiên lắng nghe (tránh vào trạng thái «đang lắng nghe» sau khi lưu cài đặt).
         """
         try:
             if not self.protocol.is_audio_channel_opened():
-                logger.info("MCP 工具配置已更新（当前未连接，下次连接生效）")
+                logger.info("Cấu hình công cụ MCP đã cập nhật (hiện chưa kết nối, có hiệu lực lần kết nối tới)")
                 return
-            logger.info("MCP 工具配置已更新，正在重连协议…")
-            # 打断进行中的听/说语义，避免重连后沿用 keep_listening
+            logger.info("Cấu hình công cụ MCP đã cập nhật, đang kết nối lại giao thức…")
+            # Ngắt ngữ nghĩa nghe/nói đang diễn ra để tránh giữ keep_listening sau khi kết nối lại
             self.state.set_keep_listening(False)
             self._aborted = False
             self._keep_idle_on_channel_open = True
@@ -173,16 +173,16 @@ class ConversationSession:
                 self._keep_idle_on_channel_open = False
                 raise
             if ok:
-                # 双保险：若 OPENED 回调顺序异常，仍拉回空闲
+                # Bảo hiểm kép: nếu thứ tự callback OPENED bất thường, vẫn kéo về IDLE
                 if not self.state.is_idle():
                     await self.state.set_device_state(DeviceState.IDLE)
-                logger.info("协议重连成功（新 tools/list 将在握手时生效，保持空闲）")
+                logger.info("Kết nối lại giao thức thành công (tools/list mới sẽ có hiệu lực khi bắt tay, giữ trạng thái chờ)")
             else:
                 self._keep_idle_on_channel_open = False
-                logger.warning("协议重连失败，请手动重新连接")
+                logger.warning("Kết nối lại giao thức thất bại, vui lòng kết nối lại thủ công")
         except Exception as e:
             self._keep_idle_on_channel_open = False
-            logger.error(f"协议重连失败: {e}", exc_info=True)
+            logger.error(f"Kết nối lại giao thức thất bại: {e}", exc_info=True)
 
     async def start_listening(self, mode: ListeningMode) -> None:
         ok = await self.connect_protocol()
@@ -207,7 +207,7 @@ class ConversationSession:
         self.state.set_keep_listening(False)
 
         if self.state.is_speaking():
-            logger.info("说话中发送打断")
+            logger.info("Đang phát giọng nói, gửi lệnh ngắt")
             await self.protocol.send_abort_speaking(None)
             await self.state.set_device_state(DeviceState.IDLE)
 
@@ -235,19 +235,19 @@ class ConversationSession:
         await self.state.set_device_state(DeviceState.LISTENING)
 
     async def abort_speaking(self, reason: str) -> None:
-        # 自动对话还在持续听时，打断后回到 listening，别停在 idle
+        # Khi cuộc hội thoại tự động vẫn đang tiếp tục nghe, ngắt lời xong quay về listening chứ đừng dừng ở idle
         if self._aborted:
-            logger.debug(f"已经中止，忽略重复请求: {reason}")
+            logger.debug(f"Đã hủy bỏ trước đó, bỏ qua yêu cầu trùng lặp: {reason}")
             return
 
-        logger.info(f"中止语音输出: {reason}")
+        logger.info(f"Hủy bỏ phát giọng nói: {reason}")
         self._aborted = True
         self.state.set_aborted(True)
         try:
             if self.protocol.is_audio_channel_opened():
                 await self.protocol.send_abort_speaking(reason)
         except Exception as e:
-            logger.warning(f"发送 abort 失败: {e}", exc_info=True)
+            logger.warning(f"Gửi abort thất bại: {e}", exc_info=True)
 
         if self.state.keep_listening:
             if self.state.listening_mode != ListeningMode.REALTIME:
@@ -258,12 +258,12 @@ class ConversationSession:
                         )
                     except Exception as e:
                         logger.warning(
-                            f"打断后重新 listen 失败: {e}",
+                            f"Lắng nghe lại sau khi ngắt thất bại: {e}",
                             exc_info=True,
                         )
             await self.state.set_device_state(DeviceState.LISTENING)
             self._aborted = False
             self.state.set_aborted(False)
-            logger.debug("打断后已恢复持续监听")
+            logger.debug("Đã khôi phục lắng nghe liên tục sau khi ngắt")
         else:
             await self.state.set_device_state(DeviceState.IDLE)

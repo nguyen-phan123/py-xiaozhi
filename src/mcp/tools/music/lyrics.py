@@ -96,7 +96,7 @@ async def fetch_kuwo_lyrics(
 ) -> list[LyricLine]:
     """从酷我接口拉歌词并解析."""
     try:
-        logger.info(f"获取歌词: ID={song_id}")
+        logger.info(f"Lấy lời bài hát: ID={song_id}")
         response = await asyncio.to_thread(
             requests.get,
             lyrics_url,
@@ -108,19 +108,19 @@ async def fetch_kuwo_lyrics(
         data = response.json()
 
         if data.get("status") != 200:
-            logger.info("该歌曲暂无歌词")
+            logger.info("Bài hát này tạm thời chưa có lời")
             return []
 
         lrc_list = data.get("data", {}).get("lrclist", [])
         if not lrc_list:
-            logger.warning("未获取到歌词数据")
+            logger.warning("Không lấy được dữ liệu lời bài hát")
             return []
 
         lyrics, filtered = parse_kuwo_lrc_list(lrc_list)
         logger.info(
-            f"成功获取歌词，共 {len(lyrics)} 行（过滤 {filtered} 行元数据）"
+            f"Lấy lời bài hát thành công, tổng cộng {len(lyrics)} dòng (lọc {filtered} dòng metadata)"
         )
         return lyrics
     except Exception as e:
-        logger.error(f"获取歌词失败: {e}", exc_info=True)
+        logger.error(f"Lấy lời bài hát thất bại: {e}", exc_info=True)
         return []

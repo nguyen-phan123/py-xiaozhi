@@ -1,8 +1,8 @@
-"""快捷键插件模块.
+"""Module plugin phím tắt.
 
-提供跨平台的全局快捷键支持：
-- macOS: 使用 Quartz Event Tap (PyObjC)
-- Linux/Windows: 使用 pynput
+Cung cấp hỗ trợ phím tắt toàn cục đa nền tảng:
+- macOS: Sử dụng Quartz Event Tap (PyObjC)
+- Linux/Windows: Sử dụng pynput
 """
 
 import asyncio
@@ -27,46 +27,46 @@ __all__ = ["ShortcutBackend", "ShortcutConfig", "ShortcutsPlugin", "create_backe
 def create_backend(
     loop: Optional[asyncio.AbstractEventLoop] = None,
 ) -> Optional[ShortcutBackend]:
-    """创建适合当前平台的快捷键后端.
+    """Tạo backend phím tắt phù hợp với nền tảng hiện tại.
 
     Args:
-        loop: asyncio 事件循环
+        loop: Event loop asyncio
 
     Returns:
-        快捷键后端实例，如果无法创建则返回 None
+        Instance backend phím tắt, trả về None nếu không thể tạo
     """
     if sys.platform == "darwin":
-        # macOS: 优先使用 Quartz Event Tap
+        # macOS: Ưu tiên sử dụng Quartz Event Tap
         try:
             from .macos_backend import MacOSShortcutBackend
 
-            logger.info("使用 macOS Quartz Event Tap 后端")
+            logger.info("Sử dụng backend macOS Quartz Event Tap")
             return MacOSShortcutBackend(loop)
         except ImportError as e:
-            logger.warning(f"无法加载 macOS 后端: {e}", exc_info=True)
-            logger.info("回退到 pynput 后端")
-            # 回退到 pynput
+            logger.warning(f"Không thể tải backend macOS: {e}", exc_info=True)
+            logger.info("Fallback về backend pynput")
+            # Fallback về pynput
             try:
                 from .pynput_backend import PynputShortcutBackend
 
                 return PynputShortcutBackend(loop)
             except ImportError as e2:
-                logger.error(f"无法加载 pynput 后端: {e2}")
+                logger.error(f"Không thể tải backend pynput: {e2}")
                 return None
     else:
-        # Linux/Windows: 使用 pynput
+        # Linux/Windows: Sử dụng pynput
         try:
             from .pynput_backend import PynputShortcutBackend
 
-            logger.info("使用 pynput 后端")
+            logger.info("Sử dụng backend pynput")
             return PynputShortcutBackend(loop)
         except ImportError as e:
-            logger.error(f"无法加载 pynput 后端: {e}", exc_info=True)
+            logger.error(f"Không thể tải backend pynput: {e}", exc_info=True)
             return None
 
 
 class _CmdAdapter:
-    """快捷键命令适配器."""
+    """Adapter lệnh phím tắt."""
 
     def __init__(self, cmd: "PluginCommands", ctx: "PluginContext"):
         self._cmd = cmd
@@ -84,22 +84,22 @@ class _CmdAdapter:
             )
             await self._cmd.start_listening(mode)
         except Exception as e:
-            logger.error(f"切换对话状态失败: {e}", exc_info=True)
+            logger.error(f"Chuyển đổi trạng thái đối thoại thất bại: {e}", exc_info=True)
 
     async def abort_speaking(self, reason):
         try:
             await self._cmd.abort_speaking(reason)
         except Exception as e:
-            logger.error(f"中断对话失败: {e}", exc_info=True)
+            logger.error(f"Ngắt đối thoại thất bại: {e}", exc_info=True)
 
 
 class ShortcutsPlugin(Plugin):
-    """快捷键插件."""
+    """Plugin phím tắt."""
 
     name = "shortcuts"
-    priority = 70  # 最低优先级，依赖 UIPlugin
+    priority = 70  # Mức độ ưu tiên thấp nhất, phụ thuộc vào UIPlugin
 
-    # 快捷键名称常量
+    # Hằng số tên phím tắt
     MANUAL_PRESS = "MANUAL_PRESS"
     AUTO_TOGGLE = "AUTO_TOGGLE"
     ABORT = "ABORT"
@@ -122,51 +122,51 @@ class ShortcutsPlugin(Plugin):
         self._loop = asyncio.get_running_loop()
         self._event_bus = ctx.event_bus
 
-        # 加载配置
+        # Tải cấu hình
         self._load_config()
 
-        # 创建后端
+        # Tạo backend
         self._backend = create_backend(self._loop)
         if not self._backend:
-            logger.warning("无法创建快捷键后端，快捷键功能将不可用")
+            logger.warning("Không thể tạo backend phím tắt, tính năng phím tắt sẽ không khả dụng")
 
-        # 订阅配置变更事件
+        # Đăng ký sự kiện thay đổi cấu hình
         from src.core.event_bus import Events
 
         ctx.event_bus.on(Events.CONFIG_CHANGED, self._on_config_changed)
 
     def _load_config(self) -> None:
-        """加载快捷键配置."""
+        """Tải cấu hình phím tắt."""
         self._shortcuts_config = self._config.get_config("SHORTCUTS", {}) or {}
         self._enabled = bool(self._shortcuts_config.get("ENABLED", True))
 
     async def _on_config_changed(self, data=None) -> None:
-        """配置变更时重新加载."""
-        logger.info("ShortcutsPlugin: 收到配置变更事件，重新加载配置")
+        """Tải lại khi cấu hình thay đổi."""
+        logger.info("ShortcutsPlugin: Nhận được sự kiện thay đổi cấu hình, đang tải lại cấu hình")
         self.reload_from_config()
 
     async def start(self) -> None:
-        """启动插件."""
+        """Khởi chạy plugin."""
         if not self._enabled:
-            logger.info("快捷键功能已禁用")
+            logger.info("Tính năng phím tắt đã bị vô hiệu hóa")
             return
 
         if not self._backend:
-            logger.warning("快捷键后端不可用")
+            logger.warning("Backend phím tắt không khả dụng")
             return
 
-        # 注册快捷键
+        # Đăng ký phím tắt
         self._register_shortcuts()
 
-        # 启动后端
+        # Khởi động backend
         success = await self._backend.start()
         if success:
-            logger.info("快捷键插件已启动")
+            logger.info("Plugin phím tắt đã khởi động")
         else:
-            logger.error("快捷键后端启动失败")
+            logger.error("Khởi động backend phím tắt thất bại")
 
     def _register_shortcuts(self) -> None:
-        """注册所有快捷键."""
+        """Đăng ký tất cả phím tắt."""
         if not self._backend:
             return
 
@@ -195,7 +195,7 @@ class ShortcutsPlugin(Plugin):
             self._backend.register(name, config, handler)
 
     def _handle_manual_press(self) -> None:
-        """处理手动按键快捷键 - 使用 UI_MANUAL_TOGGLE 事件."""
+        """Xử lý phím tắt nhấn thủ công - sử dụng sự kiện UI_MANUAL_TOGGLE."""
         if not self._event_bus or not self._loop:
             return
 
@@ -206,7 +206,7 @@ class ShortcutsPlugin(Plugin):
         )
 
     def _handle_auto_toggle(self) -> None:
-        """处理自动对话切换快捷键."""
+        """Xử lý phím tắt chuyển đổi đối thoại tự động."""
         if not self._adapter or not self._loop:
             return
 
@@ -215,7 +215,7 @@ class ShortcutsPlugin(Plugin):
         )
 
     def _handle_abort(self) -> None:
-        """处理中断快捷键."""
+        """Xử lý phím tắt ngắt lời."""
         if not self._adapter or not self._loop:
             return
 
@@ -224,7 +224,7 @@ class ShortcutsPlugin(Plugin):
         )
 
     def _handle_mode_toggle(self) -> None:
-        """处理模式切换快捷键."""
+        """Xử lý phím tắt chuyển đổi chế độ."""
         if not self._event_bus or not self._loop:
             return
 
@@ -235,7 +235,7 @@ class ShortcutsPlugin(Plugin):
         )
 
     def _handle_window_toggle(self) -> None:
-        """处理窗口切换快捷键."""
+        """Xử lý phím tắt ẩn/hiện cửa sổ."""
         if not self._event_bus or not self._loop:
             return
 
@@ -246,7 +246,7 @@ class ShortcutsPlugin(Plugin):
         )
 
     async def stop(self) -> None:
-        """停止插件."""
+        """Dừng plugin."""
         if self._backend:
             await self._backend.stop()
 
@@ -256,18 +256,18 @@ class ShortcutsPlugin(Plugin):
             pool.register("shortcuts.backend", backend.stop)
 
     def reload_from_config(self) -> None:
-        """从配置重新加载."""
+        """Tải lại từ cấu hình."""
         self._load_config()
 
         if not self._backend:
             return
 
-        # 注销所有快捷键
+        # Hủy đăng ký tất cả phím tắt
         self._backend.unregister_all()
 
         if self._enabled:
-            # 重新注册
+            # Đăng ký lại
             self._register_shortcuts()
-            logger.info("快捷键配置已重新加载")
+            logger.info("Cấu hình phím tắt đã được tải lại")
         else:
-            logger.info("快捷键功能已禁用")
+            logger.info("Tính năng phím tắt đã bị vô hiệu hóa")

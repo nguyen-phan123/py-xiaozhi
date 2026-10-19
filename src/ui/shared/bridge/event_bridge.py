@@ -34,7 +34,7 @@ class EventBridge(QObject):
     def _emit_event(self, event: str, data=None):
         """安全地发射 EventBus 事件，在 Qt 主线程中调度到 asyncio loop."""
         if self._task_manager is None:
-            logger.error("EventBridge: TaskManager 未注入，无法发射事件")
+            logger.error("EventBridge: TaskManager chưa được inject, không thể phát sự kiện")
             return
 
         def do_emit():
@@ -43,7 +43,7 @@ class EventBridge(QObject):
                 self._task_manager.spawn(self._event_bus.emit(event, data), name=task_name)
             except Exception as e:
                 logger.warning(
-                    f"EventBridge: 发射事件 {event} 失败: {e}",
+                    f"EventBridge: Phát sự kiện {event} thất bại: {e}",
                     exc_info=True,
                 )
 
@@ -55,55 +55,55 @@ class EventBridge(QObject):
     @Slot()
     def onButtonPress(self):
         """手动模式按钮按下."""
-        logger.debug("EventBridge: 按钮按下")
+        logger.debug("EventBridge: Nút được nhấn")
         self._emit_event(Events.UI_BUTTON_PRESS)
 
     @Slot()
     def onButtonRelease(self):
         """手动模式按钮释放."""
-        logger.debug("EventBridge: 按钮释放")
+        logger.debug("EventBridge: Nút được nhả")
         self._emit_event(Events.UI_BUTTON_RELEASE)
 
     @Slot()
     def onManualToggle(self):
         """手动模式录音切换（点击开始/停止）."""
-        logger.debug("EventBridge: 手动录音切换")
+        logger.debug("EventBridge: Chuyển đổi ghi âm thủ công")
         self._emit_event(Events.UI_MANUAL_TOGGLE)
 
     @Slot()
     def onAutoToggle(self):
         """自动模式切换."""
-        logger.debug("EventBridge: 自动模式切换")
+        logger.debug("EventBridge: Chuyển đổi chế độ tự động")
         self._emit_event(Events.UI_AUTO_TOGGLE)
 
     @Slot()
     def onAutoStart(self):
         """自动模式：开始或停止对话."""
-        logger.debug("EventBridge: 自动模式开始/停止对话")
+        logger.debug("EventBridge: Bắt đầu/dừng đối thoại chế độ tự động")
         self._emit_event(Events.UI_AUTO_START)
 
     @Slot()
     def onAbort(self):
         """中断请求."""
-        logger.debug("EventBridge: 中断请求")
+        logger.debug("EventBridge: Yêu cầu ngắt")
         self._emit_event(Events.UI_ABORT_REQUEST)
 
     @Slot(str)
     def onSendText(self, text: str):
         """发送文本."""
         if text.strip():
-            logger.debug(f"EventBridge: 发送文本: {text[:20]}...")
+            logger.debug(f"EventBridge: Gửi văn bản: {text[:20]}...")
             from src.ui.shared.events import UISendTextRequest
             self._emit_event(Events.UI_SEND_TEXT, UISendTextRequest(text=text))
 
     @Slot()
     def onQuitRequest(self):
         """退出请求."""
-        logger.info("EventBridge: 退出请求")
+        logger.info("EventBridge: Yêu cầu thoát")
         self._emit_event(Events.UI_QUIT_REQUEST)
 
     @Slot()
     def onOpenSettings(self):
         """打开设置窗口 - 直接发射信号到 QML."""
-        logger.debug("EventBridge: 打开设置窗口")
+        logger.debug("EventBridge: Mở cửa sổ cài đặt")
         self.showSettingsWindow.emit()

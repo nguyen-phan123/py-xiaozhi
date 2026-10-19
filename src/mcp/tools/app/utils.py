@@ -292,7 +292,7 @@ async def get_cached_applications(force_refresh: bool = False) -> list[dict[str,
         and (current_time - _cache_timestamp) < _cache_duration
     ):
         logger.debug(
-            f"[AppUtils] 使用缓存的应用程序列表，缓存时间: {int(current_time - _cache_timestamp)}秒前"
+            f"[AppUtils] Sử dụng danh sách ứng dụng đã cache, thời gian cache: {int(current_time - _cache_timestamp)}s trước"
         )
         return _cached_applications
 
@@ -302,7 +302,7 @@ async def get_cached_applications(force_refresh: bool = False) -> list[dict[str,
 
         from .scanner import scan_installed_applications
 
-        logger.info("[AppUtils] 刷新应用程序缓存")
+        logger.info("[AppUtils] Làm mới bộ nhớ đệm ứng dụng")
         result_json = await scan_installed_applications(
             {"force_refresh": force_refresh}
         )
@@ -312,17 +312,17 @@ async def get_cached_applications(force_refresh: bool = False) -> list[dict[str,
             _cached_applications = result.get("applications", [])
             _cache_timestamp = current_time
             logger.info(
-                f"[AppUtils] 应用程序缓存已刷新，找到 {len(_cached_applications)} 个应用"
+                f"[AppUtils] Bộ nhớ đệm ứng dụng đã làm mới, tìm thấy {len(_cached_applications)} ứng dụng"
             )
             return _cached_applications
         else:
             logger.warning(
-                f"[AppUtils] 应用程序扫描失败: {result.get('message', '未知错误')}"
+                f"[AppUtils] Quét ứng dụng thất bại: {result.get('message', 'lỗi không xác định')}"
             )
             return _cached_applications or []
 
     except Exception as e:
-        logger.error(f"[AppUtils] 刷新应用程序缓存失败: {e}", exc_info=True)
+        logger.error(f"[AppUtils] Làm mới bộ nhớ đệm ứng dụng thất bại: {e}", exc_info=True)
         return _cached_applications or []
 
 
@@ -368,12 +368,12 @@ async def find_best_matching_app(
         best_score, best_app = matches[0]
 
         logger.info(
-            f"[AppUtils] 找到最佳匹配: {best_app.get('display_name', best_app.get('name', ''))} (分数: {best_score})"
+            f"[AppUtils] Tìm thấy khớp tốt nhất: {best_app.get('display_name', best_app.get('name', ''))} (điểm: {best_score})"
         )
         return best_app
 
     except Exception as e:
-        logger.error(f"[AppUtils] 查找匹配应用失败: {e}", exc_info=True)
+        logger.error(f"[AppUtils] Tìm ứng dụng khớp thất bại: {e}", exc_info=True)
         return None
 
 
@@ -383,7 +383,7 @@ def clear_app_cache():
 
     _cached_applications = None
     _cache_timestamp = 0
-    logger.info("[AppUtils] 应用程序缓存已清空")
+    logger.info("[AppUtils] Bộ nhớ đệm ứng dụng đã được xóa")
 
 
 def get_system_scanner():
@@ -403,7 +403,7 @@ def get_system_scanner():
 
         return scanner_linux
     else:
-        logger.warning(f"[AppUtils] 不支持的系统: {system}")
+        logger.warning(f"[AppUtils] Hệ thống không được hỗ trợ: {system}")
         return None
 
 

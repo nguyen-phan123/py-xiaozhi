@@ -550,7 +550,7 @@ class ScreenshotCamera(BaseCamera):
                 try:
                     os.unlink(display["path"])
                 except Exception as e:
-                    logger.debug(f"清理截图临时文件失败: {e}")
+                    logger.debug(f"Dọn dẹp tệp tạm chụp màn hình thất bại: {e}")
 
             if len(displays) == 1:
                 # 单显示器，直接返回

@@ -29,19 +29,19 @@ async def kill_application(args: dict[str, Any]) -> bool:
     try:
         app_name = args["app_name"]
         force = args.get("force", False)
-        logger.info(f"[AppKiller] 尝试关闭应用程序: {app_name}, 强制关闭: {force}")
+        logger.info(f"[AppKiller] Đang thử đóng ứng dụng: {app_name}, buộc đóng: {force}")
 
         success = await asyncio.to_thread(kill_application_by_name, app_name, force)
 
         if success:
-            logger.info(f"[AppKiller] 成功关闭应用程序: {app_name}")
+            logger.info(f"[AppKiller] Đóng ứng dụng thành công: {app_name}")
         else:
-            logger.warning(f"[AppKiller] 未能关闭应用程序: {app_name}")
+            logger.warning(f"[AppKiller] Không thể đóng ứng dụng: {app_name}")
 
         return success
 
     except Exception as e:
-        logger.error(f"[AppKiller] 关闭应用程序时出错: {e}", exc_info=True)
+        logger.error(f"[AppKiller] Lỗi khi đóng ứng dụng: {e}", exc_info=True)
         return False
 
 
@@ -57,7 +57,7 @@ async def list_running_applications(args: dict[str, Any]) -> str:
     """
     try:
         filter_name = args.get("filter_name", "")
-        logger.info(f"[AppKiller] 开始列出正在运行的应用程序，过滤条件: {filter_name}")
+        logger.info(f"[AppKiller] Bắt đầu liệt kê ứng dụng đang chạy, điều kiện lọc: {filter_name}")
 
         apps = await asyncio.to_thread(_list_apps, filter_name)
 
@@ -65,10 +65,10 @@ async def list_running_applications(args: dict[str, Any]) -> str:
             "success": True,
             "total_count": len(apps),
             "applications": apps[:50],
-            "message": f"找到 {len(apps)} 个正在运行的应用程序",
+            "message": f"找到 {len(apps)} ứng dụng đang chạy",
         }
 
-        logger.info(f"[AppKiller] 列出完成，找到 {len(apps)} 个正在运行的应用程序")
+        logger.info(f"[AppKiller] Liệt kê hoàn tất, tìm thấy {len(apps)} ứng dụng đang chạy")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:

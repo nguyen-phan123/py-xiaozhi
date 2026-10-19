@@ -1,7 +1,7 @@
-"""macOS 快捷键后端.
+"""Backend phím tắt macOS.
 
-使用 Carbon API 的 RegisterEventHotKey 注册全局热键。
-这与 Electron 的 globalShortcut 底层使用相同的 API。
+Sử dụng RegisterEventHotKey của Carbon API để đăng ký hotkey toàn cục.
+Cơ chế này sử dụng cùng API tầng dưới như globalShortcut của Electron.
 """
 
 import asyncio
@@ -14,7 +14,7 @@ from .base import ShortcutBackend, ShortcutConfig
 
 logger = get_logger()
 
-# 检查是否在 macOS 上
+# Kiểm tra xem có đang chạy trên macOS không
 if sys.platform != "darwin":
     raise ImportError("macOS backend only works on macOS")
 
@@ -27,7 +27,7 @@ except ImportError as e:
     ) from e
 
 
-# Carbon 虚拟键码映射
+# Bảng ánh xạ mã phím ảo của Carbon
 # https://developer.apple.com/library/archive/technotes/tn2450/_index.html
 KEYCODE_MAP = {
     "a": 0x00, "s": 0x01, "d": 0x02, "f": 0x03, "h": 0x04,
@@ -49,7 +49,7 @@ KEYCODE_MAP = {
     "home": 0x73, "end": 0x77, "pageup": 0x74, "pagedown": 0x79,
 }
 
-# 修饰键掩码
+# Mặt nạ phím bổ trợ (modifier)
 MODIFIER_MAP = {
     "cmd": Quartz.kCGEventFlagMaskCommand,
     "command": Quartz.kCGEventFlagMaskCommand,
@@ -62,9 +62,9 @@ MODIFIER_MAP = {
 
 
 class MacOSShortcutBackend(ShortcutBackend):
-    """macOS 快捷键后端.
+    """Backend phím tắt macOS.
 
-    使用 Quartz Event Tap 监听全局热键事件。
+    Sử dụng Quartz Event Tap để lắng nghe sự kiện hotkey toàn cục.
     """
 
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop] = None):
@@ -76,37 +76,37 @@ class MacOSShortcutBackend(ShortcutBackend):
         self._next_hotkey_id = 1
         self._monitor_thread = None
         self._pressed_modifiers = 0
-        self._check_interval = 5.0  # 健康检查间隔（秒）
+        self._check_interval = 5.0  # Khoảng thời gian kiểm tra sức khỏe (giây)
         self._health_check_task = None
 
     async def start(self) -> bool:
-        """启动快捷键监听."""
+        """Bắt đầu lắng nghe phím tắt."""
         if self._running:
             return True
 
         try:
-            # 创建事件监听
+            # Tạo bộ lắng nghe sự kiện
             self._create_event_tap()
             self._running = True
 
-            # 启动健康检查
+            # Bắt đầu kiểm tra sức khỏe
             self._start_health_check()
 
-            logger.info("macOS 全局快捷键监听已启动 (Quartz Event Tap)")
+            logger.info("Đã khởi động lắng nghe phím tắt toàn cục macOS (Quartz Event Tap)")
             return True
         except Exception as e:
-            logger.error(f"启动 macOS 快捷键监听失败: {e}", exc_info=True)
+            logger.error(f"Khởi động lắng nghe phím tắt macOS thất bại: {e}", exc_info=True)
             return False
 
     def _create_event_tap(self):
-        """创建 Quartz Event Tap."""
-        # 监听键盘按下事件
+        """Tạo Quartz Event Tap."""
+        # Lắng nghe sự kiện nhấn phím
         event_mask = (
             Quartz.CGEventMaskBit(Quartz.kCGEventKeyDown) |
             Quartz.CGEventMaskBit(Quartz.kCGEventFlagsChanged)
         )
 
-        # ListenOnly：不拦截事件流，Ctrl+C / 系统快捷键可正常到达终端
+        # ListenOnly: Không chặn luồng sự kiện, Ctrl+C / phím tắt hệ thống vẫn truyền bình thường đến terminal
         self._tap = Quartz.CGEventTapCreate(
             Quartz.kCGSessionEventTap,
             Quartz.kCGHeadInsertEventTap,
@@ -118,11 +118,11 @@ class MacOSShortcutBackend(ShortcutBackend):
 
         if self._tap is None:
             raise RuntimeError(
-                "无法创建 Event Tap。请确保已授予辅助功能权限：\n"
-                "系统偏好设置 → 安全性与隐私 → 隐私 → 辅助功能"
+                "Không thể tạo Event Tap. Vui lòng đảm bảo đã cấp quyền Trợ năng (Accessibility):\n"
+                "Cài đặt hệ thống → Quyền riêng tư & Bảo mật → Trợ năng"
             )
 
-        # 将 tap 添加到当前运行循环
+        # Thêm tap vào run loop hiện tại
         self._run_loop_source = Quartz.CFMachPortCreateRunLoopSource(
             None, self._tap, 0
         )
@@ -134,31 +134,31 @@ class MacOSShortcutBackend(ShortcutBackend):
         Quartz.CGEventTapEnable(self._tap, True)
 
     def _event_callback(self, proxy, event_type, event, refcon):
-        """事件回调函数."""
+        """Hàm callback sự kiện."""
         try:
             if event_type == Quartz.kCGEventKeyDown:
-                # 获取键码和修饰键
+                # Lấy keycode và modifier
                 keycode = Quartz.CGEventGetIntegerValueField(
                     event, Quartz.kCGKeyboardEventKeycode
                 )
                 flags = Quartz.CGEventGetFlags(event)
 
-                # 检查是否匹配已注册的热键
+                # Kiểm tra xem có khớp với hotkey đã đăng ký không
                 self._check_hotkey(keycode, flags)
 
             elif event_type == Quartz.kCGEventFlagsChanged:
-                # 更新修饰键状态
+                # Cập nhật trạng thái phím bổ trợ
                 self._pressed_modifiers = Quartz.CGEventGetFlags(event)
 
         except Exception as e:
-            logger.error(f"事件回调错误: {e}", exc_info=True)
+            logger.error(f"Lỗi callback sự kiện: {e}", exc_info=True)
 
         return event
 
     def _check_hotkey(self, keycode: int, flags: int) -> None:
-        """检查是否匹配已注册的热键."""
+        """Kiểm tra xem có khớp với hotkey đã đăng ký không."""
         for name, config in self._shortcuts.items():
-            # 获取期望的键码
+            # Lấy keycode mong đợi
             expected_keycode = KEYCODE_MAP.get(config.key.lower())
             if expected_keycode is None:
                 continue
@@ -166,32 +166,32 @@ class MacOSShortcutBackend(ShortcutBackend):
             if keycode != expected_keycode:
                 continue
 
-            # 检查修饰键
+            # Kiểm tra phím bổ trợ
             expected_modifier = MODIFIER_MAP.get(config.modifier.lower(), 0)
             if expected_modifier == 0:
                 continue
 
-            # 检查修饰键是否匹配（只检查期望的修饰键是否按下）
+            # Kiểm tra xem modifier có khớp không (chỉ kiểm tra modifier mong đợi có được nhấn)
             if flags & expected_modifier:
-                logger.debug(f"触发快捷键: {name}")
+                logger.debug(f"Kích hoạt phím tắt: {name}")
                 self._run_callback(name)
 
     async def stop(self) -> None:
-        """停止快捷键监听."""
+        """Dừng lắng nghe phím tắt."""
         self._running = False
 
-        # 停止健康检查
+        # Dừng kiểm tra sức khỏe
         if self._health_check_task:
             self._health_check_task.cancel()
-            # concurrent.futures.Future 不能直接 await，需要特殊处理
+            # concurrent.futures.Future không thể await trực tiếp, cần xử lý đặc biệt
             try:
-                # 等待 Future 完成（忽略取消异常）
+                # Chờ Future hoàn thành (bỏ qua ngoại lệ hủy)
                 self._health_check_task.result(timeout=1.0)
             except Exception as e:
-                logger.debug(f"MacOS 健康检查超时: {e}")
+                logger.debug(f"Health check macOS timeout: {e}")
             self._health_check_task = None
 
-        # 移除 event tap
+        # Gỡ bỏ event tap
         if self._tap:
             Quartz.CGEventTapEnable(self._tap, False)
             if self._run_loop_source:
@@ -203,18 +203,18 @@ class MacOSShortcutBackend(ShortcutBackend):
             self._tap = None
             self._run_loop_source = None
 
-        logger.info("macOS 全局快捷键监听已停止")
+        logger.info("Đã dừng lắng nghe phím tắt toàn cục macOS")
 
     def register(self, name: str, config: ShortcutConfig, callback: Callable) -> bool:
-        """注册快捷键."""
-        # 验证键码
+        """Đăng ký phím tắt."""
+        # Xác thực keycode
         if config.key.lower() not in KEYCODE_MAP:
-            logger.warning(f"不支持的按键: {config.key}")
+            logger.warning(f"Phím không được hỗ trợ: {config.key}")
             return False
 
-        # 验证修饰键
+        # Xác thực modifier
         if config.modifier.lower() not in MODIFIER_MAP:
-            logger.warning(f"不支持的修饰键: {config.modifier}")
+            logger.warning(f"Phím bổ trợ (modifier) không được hỗ trợ: {config.modifier}")
             return False
 
         self._shortcuts[name] = config
@@ -225,11 +225,11 @@ class MacOSShortcutBackend(ShortcutBackend):
         self._hotkey_ids[name] = hotkey_id
         self._registered_hotkeys[hotkey_id] = name
 
-        logger.info(f"已注册快捷键: {name} -> {config.modifier}+{config.key}")
+        logger.info(f"Đã đăng ký phím tắt: {name} -> {config.modifier}+{config.key}")
         return True
 
     def unregister(self, name: str) -> bool:
-        """注销快捷键."""
+        """Hủy đăng ký phím tắt."""
         if name not in self._shortcuts:
             return False
 
@@ -242,20 +242,20 @@ class MacOSShortcutBackend(ShortcutBackend):
             if hotkey_id in self._registered_hotkeys:
                 del self._registered_hotkeys[hotkey_id]
 
-        logger.info(f"已注销快捷键: {name}")
+        logger.info(f"Đã hủy đăng ký phím tắt: {name}")
         return True
 
     def _start_health_check(self):
-        """启动健康检查任务."""
+        """Khởi động task kiểm tra sức khỏe."""
         if self._loop:
             self._health_check_task = asyncio.run_coroutine_threadsafe(
                 self._health_check_loop(), self._loop
             )
 
     async def _health_check_loop(self):
-        """健康检查：禁用则尝试 re-enable；失败只 warning，避免重建风暴挡退出."""
+        """Kiểm tra sức khỏe: Nếu bị tắt thì thử re-enable; thất bại chỉ ghi warning, tránh tạo lại dồn dập cản trở thoát ứng dụng."""
         consecutive_fail = 0
-        max_warn_streak = 3  # 连续失败超过此次数后降级日志频率
+        max_warn_streak = 3  # Số lần thất bại liên tiếp vượt quá mức này sẽ giảm tần suất log
 
         while self._running:
             try:
@@ -274,32 +274,32 @@ class MacOSShortcutBackend(ShortcutBackend):
                     consecutive_fail = 0
                     continue
             except Exception:
-                # tap 已失效
+                # tap đã mất hiệu lực
                 consecutive_fail += 1
             else:
-                # 仅 re-enable，不 stop/start 整棵树（重建会和 CFRunLoop/信号打架）
+                # Chỉ re-enable, không stop/start toàn bộ tree (tạo lại sẽ xung đột với CFRunLoop/tín hiệu)
                 try:
                     Quartz.CGEventTapEnable(self._tap, True)
                     if Quartz.CGEventTapIsEnabled(self._tap):
                         if consecutive_fail > 0:
-                            logger.info("Event Tap 重新启用成功")
+                            logger.info("Kích hoạt lại Event Tap thành công")
                         consecutive_fail = 0
                         continue
                 except Exception as e:
-                    logger.debug(f"CGEventTapEnable 异常: {e}")
+                    logger.debug(f"Ngoại lệ CGEventTapEnable: {e}")
 
                 consecutive_fail += 1
 
             if consecutive_fail <= max_warn_streak:
                 logger.warning(
-                    "Event Tap 仍不可用（%s 次）。"
-                    "请检查：系统设置 → 隐私与安全性 → 辅助功能。"
-                    "快捷键可能暂时失效；Ctrl+C 应仍可退出。",
+                    "Event Tap vẫn không khả dụng (%s lần). "
+                    "Vui lòng kiểm tra: Cài đặt hệ thống → Quyền riêng tư & Bảo mật → Trợ năng. "
+                    "Phím tắt có thể tạm thời mất tác dụng; Ctrl+C vẫn có thể thoát.",
                     consecutive_fail,
                 )
             elif consecutive_fail % 12 == 0:
-                # 约每分钟一次，避免刷屏
+                # Khoảng mỗi phút một lần, tránh làm tràn log
                 logger.warning(
-                    "Event Tap 持续不可用（已 %s 次检查），跳过强制重建",
+                    "Event Tap tiếp tục không khả dụng (đã kiểm tra %s lần), bỏ qua việc buộc tạo lại",
                     consecutive_fail,
                 )

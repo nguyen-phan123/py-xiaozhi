@@ -15,4 +15,4 @@ def register(host):
     cfg = host.get("config_readonly")
     log = host.get("logger")
     if log and cfg is not None:
-        log.debug("[example.hello] 已拿到 config_readonly")
+        log.debug("[example.hello] Đã nhận được config_readonly")

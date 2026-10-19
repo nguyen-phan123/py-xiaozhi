@@ -1,6 +1,6 @@
-"""设备身份与 efuse 存储.
+"""Định danh thiết bị và lưu trữ efuse (Device Identity & efuse).
 
-efuse.json 仅平铺字段（不写 device_fingerprint 嵌套）::
+efuse.json chỉ lưu trữ các trường phẳng (không ghi lồng device_fingerprint)::
 
     {
       "mac_address": "...",
@@ -9,8 +9,8 @@ efuse.json 仅平铺字段（不写 device_fingerprint 嵌套）::
       "activation_status": false
     }
 
-生成 SN/HMAC 时仍在内存中采集 fingerprint，不落盘。
-旧文件若含 device_fingerprint，加载/校验时剥离并回写。
+Khi sinh SN/HMAC vẫn thu thập fingerprint trong bộ nhớ, không ghi xuống đĩa.
+Nếu file cũ có device_fingerprint, khi tải/xác thực sẽ bóc tách và ghi đè lại.
 """
 
 from __future__ import annotations
@@ -31,7 +31,7 @@ from src.utils.resource_finder import get_user_data_dir
 
 logger = get_logger()
 
-# 持久化字段（平铺）；其它键（如历史 device_fingerprint）加载时丢弃
+# Các trường lưu trữ lâu dài (phẳng); các khóa khác (như device_fingerprint lịch sử) sẽ bị loại bỏ khi tải
 _EFUSE_KEYS = (
     "mac_address",
     "serial_number",
@@ -41,7 +41,7 @@ _EFUSE_KEYS = (
 
 
 class DeviceIdentity:
-    """efuse 文件读写、序列号 / HMAC / MAC."""
+    """Đọc/ghi file efuse, số serial / HMAC / MAC."""
 
     def __init__(self) -> None:
         self._system = platform.system()
@@ -52,13 +52,13 @@ class DeviceIdentity:
         config_dir = get_user_data_dir() / "config"
         config_dir.mkdir(parents=True, exist_ok=True)
         self._efuse_file = config_dir / "efuse.json"
-        logger.debug(f"efuse文件路径: {self._efuse_file}")
+        logger.debug(f"Đường dẫn file efuse: {self._efuse_file}")
 
     def ensure_efuse_file(self) -> None:
         fingerprint = self.generate_fresh_fingerprint()
         mac_address = fingerprint.get("mac_address")
         if not self._efuse_file or not self._efuse_file.exists():
-            logger.info("创建efuse.json文件")
+            logger.info("Tạo file efuse.json")
             self._create_efuse_file(fingerprint, mac_address)
         else:
             self._validate_efuse_file(fingerprint, mac_address)
@@ -102,7 +102,7 @@ class DeviceIdentity:
             return {"activation_status": False}
 
     def generate_fresh_fingerprint(self) -> Dict:
-        """内存采集，仅用于生成 SN/HMAC；不写入 efuse.json."""
+        """Thu thập trong bộ nhớ, chỉ dùng để tạo SN/HMAC; không ghi vào efuse.json."""
         return {
             "system": self._system,
             "hostname": platform.node(),
@@ -135,7 +135,7 @@ class DeviceIdentity:
             activation_status=False,
         )
         self._save_efuse_data(efuse_data)
-        logger.info(f"已创建efuse配置: 序列号={serial_number}")
+        logger.info(f"Đã tạo cấu hình efuse: Số serial={serial_number}")
 
     def _validate_efuse_file(self, fingerprint: Dict, mac_address: Optional[str]):
         try:
@@ -143,13 +143,13 @@ class DeviceIdentity:
                 raw = json.load(f)
             if not isinstance(raw, dict):
                 raise TypeError(
-                    f"efuse 根节点须为 object，实际为 {type(raw).__name__}"
+                    f"Node gốc của efuse phải là object, thực tế là {type(raw).__name__}"
                 )
 
             had_extra = any(k not in _EFUSE_KEYS for k in raw)
             missing = [f for f in _EFUSE_KEYS if f not in raw]
             if missing:
-                logger.warning(f"efuse缺少字段: {missing}")
+                logger.warning(f"efuse thiếu các trường: {missing}")
                 for field in missing:
                     if field == "mac_address":
                         raw[field] = mac_address
@@ -168,17 +168,17 @@ class DeviceIdentity:
             if missing or had_extra:
                 if had_extra:
                     logger.info(
-                        "efuse 已剥离非平铺字段（如 device_fingerprint）"
+                        "efuse đã loại bỏ các trường không phẳng (như device_fingerprint)"
                     )
                 self._save_efuse_data(flat)
             else:
                 self._efuse_cache = flat
         except Exception as e:
-            logger.error(f"验证efuse失败: {e}，重新创建", exc_info=True)
+            logger.error(f"Xác thực efuse thất bại: {e}, tạo lại", exc_info=True)
             self._create_efuse_file(fingerprint, mac_address)
 
     def _normalize_efuse_dict(self, data: Dict) -> Dict:
-        """只保留平铺身份字段."""
+        """Chỉ giữ lại các trường định danh phẳng."""
         return {
             "mac_address": data.get("mac_address"),
             "serial_number": data.get("serial_number"),
@@ -197,7 +197,7 @@ class DeviceIdentity:
                         if mac != "00:00:00:00:00:00":
                             return mac
         except Exception as e:
-            logger.error(f"获取MAC地址失败: {e}", exc_info=True)
+            logger.error(f"Lấy địa chỉ MAC thất bại: {e}", exc_info=True)
         return None
 
     def _normalize_mac(self, mac: str) -> str:
@@ -210,7 +210,7 @@ class DeviceIdentity:
         try:
             return machineid.id()
         except Exception as e:
-            logger.warning(f"获取 machine_id 失败: {e}", exc_info=True)
+            logger.warning(f"Lấy machine_id thất bại: {e}", exc_info=True)
             return None
 
     def _generate_serial_number_from_fingerprint(self, fingerprint: Dict) -> str:
@@ -238,8 +238,8 @@ class DeviceIdentity:
         with open(self._efuse_file, "r", encoding="utf-8") as f:
             data = json.load(f)
         if not isinstance(data, dict):
-            raise TypeError(f"efuse 根节点须为 object，实际为 {type(data).__name__}")
-        # 内存视图始终平铺；磁盘上的多余键由 ensure/validate 负责剥离回写
+            raise TypeError(f"Node gốc của efuse phải là object, thực tế là {type(data).__name__}")
+        # Dữ liệu trong bộ nhớ luôn phẳng; các khóa thừa trên đĩa do ensure/validate bóc tách và ghi lại
         flat = self._normalize_efuse_dict(data)
         self._efuse_cache = flat
         return flat
@@ -247,7 +247,7 @@ class DeviceIdentity:
     def _save_efuse_data(self, data: Dict) -> bool:
         try:
             if not self._efuse_file:
-                raise RuntimeError("efuse 路径未初始化")
+                raise RuntimeError("Đường dẫn efuse chưa được khởi tạo")
             flat = self._normalize_efuse_dict(data)
             self._efuse_file.parent.mkdir(parents=True, exist_ok=True)
             tmp = self._efuse_file.with_suffix(".tmp")
@@ -259,5 +259,5 @@ class DeviceIdentity:
             self._efuse_cache = flat
             return True
         except Exception as e:
-            logger.error(f"保存efuse失败: {e}", exc_info=True)
+            logger.error(f"Lưu efuse thất bại: {e}", exc_info=True)
             return False

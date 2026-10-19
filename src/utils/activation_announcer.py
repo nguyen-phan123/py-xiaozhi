@@ -71,7 +71,7 @@ class ActivationAnnouncer:
                     np.frombuffer(raw, dtype=np.uint8).astype(np.float32) - 128.0
                 ) / 128.0
             else:
-                logger.error(f"不支持的 WAV 位深: {sample_width * 8} bit ({file_path})")
+                logger.error(f"Độ sâu bit WAV không được hỗ trợ: {sample_width * 8} bit ({file_path})")
                 return None
 
             if channels > 1:
@@ -79,19 +79,19 @@ class ActivationAnnouncer:
 
             return audio, sample_rate
         except Exception as e:
-            logger.error(f"加载 WAV 失败 {file_path}: {e}", exc_info=True)
+            logger.error(f"Tải WAV thất bại {file_path}: {e}", exc_info=True)
             return None
 
     def _play_sounds(self, names: list[str]) -> None:
         """播放音效序列（在工作线程中执行）."""
         for name in names:
             if self._stop_flag.is_set():
-                logger.debug("播报被中断")
+                logger.debug("Phát thông báo bị gián đoạn")
                 break
 
             sound_path = self._get_sound_path(name)
             if not sound_path:
-                logger.warning(f"音效文件不存在: {name}")
+                logger.warning(f"File hiệu ứng âm thanh không tồn tại: {name}")
                 continue
 
             loaded = self._load_wav(sound_path)
@@ -111,7 +111,7 @@ class ActivationAnnouncer:
                         break
                     self._stop_flag.wait(0.05)
             except Exception as e:
-                logger.error(f"播放失败: {e}", exc_info=True)
+                logger.error(f"Phát âm thanh thất bại: {e}", exc_info=True)
 
     def announce(self, code: str) -> None:
         """播报验证码（非阻塞）.
@@ -120,7 +120,7 @@ class ActivationAnnouncer:
             code: 验证码字符串，如 "123456"
         """
         if not code or not code.isdigit():
-            logger.warning(f"无效的验证码: {code}")
+            logger.warning(f"Mã xác thực không hợp lệ: {code}")
             return
 
         # 停止之前的播报
@@ -129,7 +129,7 @@ class ActivationAnnouncer:
         # 构建播放序列: 激活提示 + 各个数字
         sounds = ["activation"] + list(code)
 
-        logger.info(f"播报验证码: {code}")
+        logger.info(f"Phát thông báo mã xác thực: {code}")
 
         self._stop_flag.clear()
         self._play_thread = threading.Thread(
@@ -148,7 +148,7 @@ class ActivationAnnouncer:
         try:
             sd.stop()
         except Exception as e:
-            logger.debug(f"停止音频播放失败: {e}")
+            logger.debug(f"Dừng phát âm thanh thất bại: {e}")
 
         # 等待线程结束
         if self._play_thread and self._play_thread.is_alive():

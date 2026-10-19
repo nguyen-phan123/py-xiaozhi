@@ -51,4 +51,4 @@ def register_weather_tools(add_tool: Callable[[McpTool], None]) -> None:
 
     for tool in tools:
         add_tool(tool)
-    logger.info("已注册 %d 个天气 MCP 工具（register_weather_tools, mock）", len(tools))
+    logger.info("Đã đăng ký %d MCP tool thời tiết (register_weather_tools, mock)", len(tools))

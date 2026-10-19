@@ -7,10 +7,10 @@ class InitializationStage(Enum):
     初始化阶段枚举.
     """
 
-    DEVICE_FINGERPRINT = "第一阶段：设备身份准备"
-    CONFIG_MANAGEMENT = "第二阶段：配置管理初始化"
-    OTA_CONFIG = "第三阶段：OTA获取配置"
-    ACTIVATION = "第四阶段：激活流程"
+    DEVICE_FINGERPRINT = "Giai đoạn 1: Chuẩn bị định danh thiết bị"
+    CONFIG_MANAGEMENT = "Giai đoạn 2: Khởi tạo quản lý cấu hình"
+    OTA_CONFIG = "Giai đoạn 3: Lấy cấu hình OTA"
+    ACTIVATION = "Giai đoạn 4: Quy trình kích hoạt"
 
 
 class SystemConstants:
@@ -20,7 +20,7 @@ class SystemConstants:
 
     # 应用信息
     APP_NAME = "py-xiaozhi"  # 程序标识名（ASCII，用于目录、配置、bundle_id）
-    APP_DISPLAY_NAME = "小智"  # 显示名称（用于窗口标题、Launchpad、安装器 UI）
+    APP_DISPLAY_NAME = "Xiaozhi"  # 显示名称（用于窗口标题、Launchpad、安装器 UI）
     APP_VERSION = "2.1.2"
     BOARD_TYPE = "bread-compact-wifi"
 

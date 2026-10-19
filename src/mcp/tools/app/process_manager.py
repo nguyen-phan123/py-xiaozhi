@@ -204,14 +204,14 @@ def kill_process(pid: int, force: bool = False) -> bool:
             try:
                 proc.wait(timeout=5)
             except psutil.TimeoutExpired:
-                logger.warning(f"[ProcessManager] 进程 {pid} 未在超时内退出，强制终止")
+                logger.warning(f"[ProcessManager] Tiến trình {pid} không thoát trong thời gian timeout, buộc kết thúc")
                 proc.kill()
         return True
     except psutil.NoSuchProcess:
-        logger.warning(f"[ProcessManager] 进程不存在: {pid}")
+        logger.warning(f"[ProcessManager] Tiến trình không tồn tại: {pid}")
         return False
     except psutil.AccessDenied as e:
-        logger.warning(f"[ProcessManager] 无权终止进程 {pid}: {e}", exc_info=True)
+        logger.warning(f"[ProcessManager] Không có quyền kết thúc tiến trình {pid}: {e}", exc_info=True)
         return False
 
 
@@ -250,10 +250,10 @@ def kill_application_by_name(app_name: str, force: bool = False) -> bool:
     """
     matched = find_matching_processes(app_name)
     if not matched:
-        logger.info(f"[ProcessManager] 未找到匹配的运行进程: {app_name}")
+        logger.info(f"[ProcessManager] Không tìm thấy tiến trình đang chạy phù hợp: {app_name}")
         return False
 
-    logger.info(f"[ProcessManager] 找到 {len(matched)} 个匹配进程: {app_name}")
+    logger.info(f"[ProcessManager] Tìm thấy {len(matched)} tiến trình khớp: {app_name}")
 
     # 按进程组分组，尝试先终止子进程再终止父进程
     success_count = 0
@@ -275,13 +275,13 @@ def kill_application_by_name(app_name: str, force: bool = False) -> bool:
             # 终止主进程
             if kill_process(pid, force):
                 success_count += 1
-                logger.info(f"[ProcessManager] 已终止进程: {app['name']} (PID={pid})")
+                logger.info(f"[ProcessManager] Đã kết thúc tiến trình: {app['name']} (PID={pid})")
         except psutil.NoSuchProcess:
-            logger.debug(f"[ProcessManager] 进程已退出: PID={pid}")
+            logger.debug(f"[ProcessManager] Tiến trình đã thoát: PID={pid}")
         except psutil.AccessDenied as e:
-            logger.warning(f"[ProcessManager] 无权操作进程 PID={pid}: {e}", exc_info=True)
+            logger.warning(f"[ProcessManager] Không có quyền thao tác tiến trình PID={pid}: {e}", exc_info=True)
 
     logger.info(
-        f"[ProcessManager] 终止操作完成，成功 {success_count}/{len(matched)} 个进程"
+        f"[ProcessManager] Hoàn tất thao tác kết thúc, thành công {success_count}/{len(matched)} tiến trình"
     )
     return success_count > 0

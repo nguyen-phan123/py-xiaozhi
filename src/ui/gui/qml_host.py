@@ -61,7 +61,7 @@ class QmlAppHost:
         ctx = self._engine.rootContext()
         for name, obj in properties.items():
             ctx.setContextProperty(name, obj)
-        logger.debug("QmlAppHost: 已注入 QML 上下文 %s", list(properties))
+        logger.debug("QmlAppHost: Đã inject context QML %s", list(properties))
 
     def load_main(self) -> None:
         if not self._engine:
@@ -71,9 +71,9 @@ class QmlAppHost:
         main_qml = qml_dir / "main.qml"
         self._engine.load(QUrl.fromLocalFile(str(main_qml)))
         if not self._engine.rootObjects():
-            logger.error("QmlAppHost: QML 加载失败")
+            logger.error("QmlAppHost: Tải QML thất bại")
             raise RuntimeError("Failed to load QML")
-        logger.debug("QmlAppHost: 已加载 %s", main_qml)
+        logger.debug("QmlAppHost: Đã tải %s", main_qml)
 
     def root_window(self):
         if not self._engine:

@@ -18,12 +18,12 @@ def open_url(url: str) -> bool:
     try:
         success = webbrowser.open(url)
         if success:
-            logger.info(f"已成功打开网页: {url}")
+            logger.info(f"Đã mở trang web thành công: {url}")
         else:
-            logger.warning(f"无法打开网页: {url}")
+            logger.warning(f"Không thể mở trang web: {url}")
         return success
     except Exception as e:
-        logger.error(f"打开网页时出错: {e}", exc_info=True)
+        logger.error(f"Lỗi khi mở trang web: {e}", exc_info=True)
         return False
 
 
@@ -33,13 +33,13 @@ def copy_to_clipboard(text: str) -> bool:
         import pyperclip
 
         pyperclip.copy(text)
-        logger.info(f'文本 "{text}" 已复制到剪贴板')
+        logger.info(f'Văn bản "{text}" đã được sao chép vào clipboard')
         return True
     except ImportError:
-        logger.warning("未安装pyperclip模块，无法复制到剪贴板")
+        logger.warning("Chưa cài đặt module pyperclip, không thể sao chép vào clipboard")
         return False
     except Exception as e:
-        logger.error(f"复制到剪贴板时出错: {e}", exc_info=True)
+        logger.error(f"Lỗi khi sao chép vào clipboard: {e}", exc_info=True)
         return False
 
 
@@ -65,7 +65,7 @@ def extract_verification_code(text: str) -> Optional[str]:
         has_activation_keyword = any(keyword in text for keyword in activation_keywords)
 
         if not has_activation_keyword:
-            logger.debug(f"文本不包含激活关键词，跳过验证码提取: {text}")
+            logger.debug(f"Văn bản không chứa từ khóa kích hoạt, bỏ qua trích xuất mã xác thực: {text}")
             return None
 
         # 更精确的验证码匹配模式
@@ -83,7 +83,7 @@ def extract_verification_code(text: str) -> Optional[str]:
             match = re.search(pattern, text)
             if match:
                 code = match.group(1)
-                logger.info(f"已从文本中提取验证码: {code}")
+                logger.info(f"Đã trích xuất mã xác thực từ văn bản: {code}")
                 return code
 
         # 通用模式匹配
@@ -91,13 +91,13 @@ def extract_verification_code(text: str) -> Optional[str]:
         if match:
             code = "".join(match.group(1).split())
             if len(code) == 6 and code.isdigit():
-                logger.info(f"已从文本中提取验证码（通用模式）: {code}")
+                logger.info(f"Đã trích xuất mã xác thực từ văn bản (chế độ chung): {code}")
                 return code
 
-        logger.warning(f"未能从文本中找到验证码: {text}")
+        logger.warning(f"Không tìm thấy mã xác thực trong văn bản: {text}")
         return None
     except Exception as e:
-        logger.error(f"提取验证码时出错: {e}", exc_info=True)
+        logger.error(f"Lỗi khi trích xuất mã xác thực: {e}", exc_info=True)
         return None
 
 

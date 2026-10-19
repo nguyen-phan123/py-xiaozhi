@@ -31,7 +31,7 @@ class TuiViewManager:
         self._app_task: asyncio.Task | None = None
 
         self._auto_mode = False
-        self._status = "待命"
+        self._status = "Chờ lệnh"
         self._connected = False
         self._chat_text = ""
         self._music_line = ""
@@ -43,14 +43,14 @@ class TuiViewManager:
             from src.ui.tui.app import XiaozhiTuiApp
         except ImportError as e:
             logger.error(
-                "TUI 模式需要 textual。请安装:\n"
+                "Chế độ TUI cần thư viện textual. Vui lòng cài đặt:\n"
                 "  uv sync --extra tui\n"
                 "  pip install '.[tui]'\n"
-                f"(原始错误: {e})"
+                f"(Lỗi gốc: {e})"
             )
             raise
 
-        logger.info("TuiViewManager: 启动 TUI 界面...")
+        logger.info("TuiViewManager: Khởi động giao diện TUI...")
         self._running = True
         self._loop = asyncio.get_running_loop()
 
@@ -70,7 +70,7 @@ class TuiViewManager:
         try:
             await self._app.run_async()
         except asyncio.CancelledError:
-            logger.info("TuiViewManager: TUI 任务被取消")
+            logger.info("TuiViewManager: Tác vụ TUI bị hủy")
             app = self._app
             if app is not None:
                 try:
@@ -85,11 +85,11 @@ class TuiViewManager:
                     self._app.uninstall_log_handler()
                 except Exception:
                     pass
-            logger.info("TuiViewManager: TUI 已结束")
+            logger.info("TuiViewManager: TUI đã kết thúc")
 
     async def close(self):
         """关闭 TUI."""
-        logger.info("TuiViewManager: 正在关闭...")
+        logger.info("TuiViewManager: Đang đóng...")
         self._running = False
         app = self._app
         if app is not None:
@@ -101,7 +101,7 @@ class TuiViewManager:
                 app.uninstall_log_handler()
             except Exception:
                 pass
-        logger.info("TuiViewManager: 已关闭")
+        logger.info("TuiViewManager: Đã đóng")
 
     def _handle_command(self, cmd: str):
         """处理用户命令."""
@@ -133,7 +133,7 @@ class TuiViewManager:
                 return
             except Exception as e:
                 logger.error(
-                    f"TuiViewManager 经 TaskManager 调度事件 {event} 失败: {e}",
+                    f"TuiViewManager qua TaskManager điều phối sự kiện {event} thất bại: {e}",
                     exc_info=True,
                 )
 
@@ -150,13 +150,13 @@ class TuiViewManager:
                     return
                 if exc:
                     logger.error(
-                        f"TuiViewManager 发射事件 {event} 失败: {exc}",
+                        f"TuiViewManager phát sự kiện {event} thất bại: {exc}",
                         exc_info=exc,
                     )
 
             fut.add_done_callback(_done)
         except Exception as e:
-            logger.error(f"TuiViewManager 调度事件 {event} 失败: {e}", exc_info=True)
+            logger.error(f"TuiViewManager điều phối sự kiện {event} thất bại: {e}", exc_info=True)
             if asyncio.iscoroutine(coro):
                 coro.close()
 
@@ -174,7 +174,7 @@ class TuiViewManager:
             try:
                 _apply()
             except Exception as e:
-                logger.debug(f"TUI set {name} 失败: {e}")
+                logger.debug(f"TUI set {name} thất bại: {e}")
 
     # ----- ViewPort -----
 

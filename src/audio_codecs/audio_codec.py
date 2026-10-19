@@ -131,10 +131,10 @@ class AudioCodec:
             # 6. 启动音频流
             self.stream_manager.start()
 
-            logger.info("AudioCodec 初始化完成")
+            logger.info("AudioCodec khởi tạo hoàn tất")
 
         except Exception as e:
-            logger.error(f"初始化音频设备失败: {e}", exc_info=True)
+            logger.error(f"Khởi tạo thiết bị âm thanh thất bại: {e}", exc_info=True)
             await self.close()
             raise
 
@@ -150,7 +150,7 @@ class AudioCodec:
             status: 状态标志
         """
         if status and "overflow" not in str(status).lower():
-            logger.warning(f"输入流状态: {status}")
+            logger.warning(f"Trạng thái luồng đầu vào: {status}")
 
         if self._is_closing:
             return
@@ -176,7 +176,7 @@ class AudioCodec:
                     )
                     self._encoded_callback(opus_data)
                 except Exception as e:
-                    logger.warning(f"编码失败: {e}", exc_info=True)
+                    logger.warning(f"Mã hóa thất bại: {e}", exc_info=True)
 
             # 3. 通知监听器（线程安全）
             with self._listeners_lock:
@@ -184,10 +184,10 @@ class AudioCodec:
                     try:
                         listener.on_audio_data(audio_converted.copy())
                     except Exception as e:
-                        logger.warning(f"监听器处理失败: {e}", exc_info=True)
+                        logger.warning(f"Xử lý listener thất bại: {e}", exc_info=True)
 
         except Exception as e:
-            logger.error(f"输入回调错误: {e}", exc_info=True)
+            logger.error(f"Lỗi callback đầu vào: {e}", exc_info=True)
 
     def _output_callback(self, outdata, frames, time_info, status):
         """输出回调：解码 → 转换 → 播放
@@ -209,7 +209,7 @@ class AudioCodec:
             now = time.monotonic()
             if now - self._last_output_status_log > 2.0:
                 self._last_output_status_log = now
-                logger.warning(f"输出流状态: {status}")
+                logger.warning(f"Trạng thái luồng đầu ra: {status}")
 
         try:
             audio_converted = None
@@ -235,7 +235,7 @@ class AudioCodec:
                 self._aec.feed_far(outdata)
 
         except Exception as e:
-            logger.error(f"输出回调错误: {e}", exc_info=True)
+            logger.error(f"Lỗi callback đầu ra: {e}", exc_info=True)
             outdata.fill(0.0)
 
     def _configure_pipeline(self):
@@ -309,7 +309,7 @@ class AudioCodec:
         try:
             config = get_config()
             if not bool(config.get_config("AEC_OPTIONS.ENABLED", False)):
-                logger.info("AEC 未启用（AEC_OPTIONS.ENABLED=false）")
+                logger.info("AEC chưa được bật (AEC_OPTIONS.ENABLED=false)")
                 return
 
             from src.audio_processing.aec_engine import AecEngine
@@ -325,7 +325,7 @@ class AudioCodec:
                 ),
             )
         except Exception as e:
-            logger.warning(f"创建 AEC 引擎失败，已旁路: {e}", exc_info=True)
+            logger.warning(f"Tạo AEC engine thất bại, đã bypass: {e}", exc_info=True)
             self._aec = None
 
     # === 对外接口（保持兼容） ===
@@ -344,9 +344,9 @@ class AudioCodec:
         """
         self._encoded_callback = callback
         if callback:
-            logger.info("已设置编码音频回调")
+            logger.info("Đã thiết lập callback mã hóa âm thanh")
         else:
-            logger.info("已清除编码音频回调")
+            logger.info("Đã xóa callback mã hóa âm thanh")
 
     def add_audio_listener(self, listener: AudioListener):
         """添加音频监听器（线程安全）
@@ -357,7 +357,7 @@ class AudioCodec:
         with self._listeners_lock:
             if listener not in self._audio_listeners:
                 self._audio_listeners.append(listener)
-                logger.info(f"已添加音频监听器: {listener.__class__.__name__}")
+                logger.info(f"Đã thêm audio listener: {listener.__class__.__name__}")
 
     def remove_audio_listener(self, listener: AudioListener):
         """移除音频监听器（线程安全）
@@ -368,7 +368,7 @@ class AudioCodec:
         with self._listeners_lock:
             if listener in self._audio_listeners:
                 self._audio_listeners.remove(listener)
-                logger.info(f"已移除音频监听器: {listener.__class__.__name__}")
+                logger.info(f"Đã gỡ bỏ audio listener: {listener.__class__.__name__}")
 
     async def write_audio(self, opus_data: bytes):
         """解码并播放音频（Opus → 扬声器）
@@ -386,9 +386,9 @@ class AudioCodec:
             if not self._server_opus_logged:
                 self._server_opus_logged = True
                 logger.info(
-                    f"服务端 Opus 参数: "
+                    f"Tham số Opus phía server: "
                     f"{toc_info['mode']} {toc_info['bandwidth_hz']} | "
-                    f"帧时长 {toc_info['duration_ms']}ms "
+                    f"thời lượng khung {toc_info['duration_ms']}ms "
                     f"({toc_info['frame_ms']}ms×{toc_info['num_frames']})"
                 )
 
@@ -400,7 +400,7 @@ class AudioCodec:
             self._tts_fifo.push(audio_float32)
 
         except Exception as e:
-            logger.warning(f"音频写入失败: {e}", exc_info=True)
+            logger.warning(f"Ghi âm thanh thất bại: {e}", exc_info=True)
 
     async def write_pcm_direct(self, pcm_float32: np.ndarray):
         """写入音乐 PCM（float32，供 MusicPlayer 使用），带水位背压.
@@ -423,13 +423,13 @@ class AudioCodec:
         self.converter.clear_output_buffer()
         count = self._tts_fifo.clear()
         if count > 0:
-            logger.info(f"清空 TTS 队列，丢弃 {count} 样本")
+            logger.info(f"Xóa hàng đợi TTS, hủy {count} mẫu")
 
     async def clear_music_queue(self):
         """清空音乐播放队列（停止/跳转时用；TTS 队列不受影响）."""
         count = self._music_fifo.clear()
         if count > 0:
-            logger.info(f"清空音乐队列，丢弃 {count} 样本")
+            logger.info(f"Xóa hàng đợi nhạc, hủy {count} mẫu")
 
     async def reinitialize_stream(self, is_input: bool = True):
         """重建音频流（支持热插拔）
@@ -459,7 +459,7 @@ class AudioCodec:
         """
         if self.stream_manager:
             self.stream_manager.stop()
-            logger.info("AudioCodec: 已停止音频流（供设备枚举）")
+            logger.info("AudioCodec: Đã dừng luồng âm thanh (để liệt kê thiết bị)")
 
     async def reload_devices(self, *, reenumerate: bool = True):
         """热重载音频设备配置
@@ -477,13 +477,13 @@ class AudioCodec:
         Returns:
             bool: 是否成功
         """
-        logger.info("AudioCodec: 开始热重载音频设备...")
+        logger.info("AudioCodec: Bắt đầu hot-reload thiết bị âm thanh...")
 
         try:
             # 1. 停止当前流（必须在 PortAudio reinit 之前）
             if self.stream_manager:
                 self.stream_manager.stop()
-                logger.debug("AudioCodec: 已停止当前音频流")
+                logger.debug("AudioCodec: Đã dừng luồng âm thanh hiện tại")
 
             # 2. 热插拔：重建 PortAudio 上下文后再按名称匹配
             if reenumerate:
@@ -495,8 +495,8 @@ class AudioCodec:
             self.device_manager.config.reload_config()
             self.device_config = self.device_manager.load_or_detect_devices()
             logger.info(
-                "AudioCodec: 新设备配置 - 输入ID: "
-                f"{self.device_config.input_device_id}, 输出ID: "
+                "AudioCodec: Cấu hình thiết bị mới - ID đầu vào: "
+                f"{self.device_config.input_device_id}, ID đầu ra: "
                 f"{self.device_config.output_device_id}"
             )
 
@@ -527,11 +527,11 @@ class AudioCodec:
             # 7. 启动音频流
             self.stream_manager.start()
 
-            logger.info("AudioCodec: 音频设备热重载完成")
+            logger.info("AudioCodec: Hot-reload thiết bị âm thanh hoàn tất")
             return True
 
         except Exception as e:
-            logger.error(f"AudioCodec: 热重载音频设备失败: {e}", exc_info=True)
+            logger.error(f"AudioCodec: Hot-reload thiết bị âm thanh thất bại: {e}", exc_info=True)
             return False
 
     async def close(self):
@@ -562,11 +562,11 @@ class AudioCodec:
             with self._listeners_lock:
                 self._audio_listeners.clear()
 
-            logger.info("AudioCodec 已关闭")
+            logger.info("AudioCodec đã đóng")
             self._closed = True
 
         except Exception as e:
-            logger.error(f"关闭音频编解码器失败: {e}", exc_info=True)
+            logger.error(f"Đóng codec âm thanh thất bại: {e}", exc_info=True)
         finally:
             self._is_closing = False
 
@@ -576,7 +576,7 @@ class AudioCodec:
         if getattr(self, "_closed", False) or getattr(self, "_is_closing", False):
             return
 
-        logger.warning("AudioCodec 未正确关闭，执行紧急清理（建议使用 async close()）")
+        logger.warning("AudioCodec chưa được đóng đúng cách, thực hiện dọn dẹp khẩn cấp (khuyến nghị dùng async close())")
 
         try:
             # 1. 停止音频流（同步）
@@ -586,7 +586,7 @@ class AudioCodec:
             # 2. 清空队列（同步版本）
             count = self._tts_fifo.clear() + self._music_fifo.clear()
             if count > 0:
-                logger.debug(f"析构函数清空了 {count} 样本音频")
+                logger.debug(f"Destructor đã xóa {count} mẫu âm thanh")
 
             # 3. 释放转换器（同步，含 soxr 重采样器）
             if self.converter:
@@ -602,10 +602,10 @@ class AudioCodec:
                     self._audio_listeners.clear()
             except Exception as e:
                 logger.warning(
-                    f"清理音频监听器失败（锁可能已损坏）: {e}", exc_info=True
+                    f"Dọn dẹp audio listener thất bại (khóa có thể đã bị hỏng): {e}", exc_info=True
                 )
 
-            logger.debug("AudioCodec 析构清理完成")
+            logger.debug("AudioCodec dọn dẹp destructor hoàn tất")
 
         except Exception as e:
-            logger.error(f"析构函数清理失败: {e}", exc_info=True)
+            logger.error(f"Dọn dẹp destructor thất bại: {e}", exc_info=True)

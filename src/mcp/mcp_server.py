@@ -59,7 +59,7 @@ class McpServer:
 
         # 检查是否已存在
         if any(t.name == tool.name for t in self.tools):
-            logger.warning(f"Tool {tool.name} already added（拒绝重复注册）")
+            logger.warning(f"Tool {tool.name} already added (từ chối đăng ký trùng lặp)")
             return
 
         logger.info(f"Add tool: {tool.name}")
@@ -157,7 +157,7 @@ class McpServer:
                 tool_owner=self._plugin_tool_owner,
             )
         except Exception as e:
-            logger.error(f"加载外挂 MCP 插件失败: {e}", exc_info=True)
+            logger.error(f"Tải plugin MCP ngoài thất bại: {e}", exc_info=True)
 
         # 恢复原有工具
         self.tools.extend(original_tools)
@@ -174,7 +174,7 @@ class McpServer:
                 data = message
 
             logger.info(
-                f"[MCP] 解析消息: {json.dumps(data, ensure_ascii=False, indent=2)}"
+                f"[MCP] Phân tích tin nhắn: {json.dumps(data, ensure_ascii=False, indent=2)}"
             )
 
             # 检查JSONRPC版本
@@ -189,7 +189,7 @@ class McpServer:
 
             # 忽略通知
             if method.startswith("notifications"):
-                logger.info(f"[MCP] 忽略通知消息: {method}")
+                logger.info(f"[MCP] Bỏ qua tin nhắn thông báo: {method}")
                 return
 
             params = data.get("params", {})
@@ -200,7 +200,7 @@ class McpServer:
                 return
 
             logger.info(
-                f"[MCP] 处理方法: {method}, ID: {request_id}, 参数: {params}"
+                f"[MCP] Xử lý phương thức: {method}, ID: {request_id}, tham số: {params}"
             )
 
             # 处理不同的方法
@@ -306,7 +306,7 @@ class McpServer:
         处理工具调用请求.
         """
         logger.info(
-            f"[MCP] 收到工具调用请求! ID={request_id}, 参数={params}"
+            f"[MCP] Nhận yêu cầu gọi tool! ID={request_id}, tham số={params}"
         )
 
         tool_name = params.get("name")
@@ -314,7 +314,7 @@ class McpServer:
             await self._reply_error(request_id, "Missing tool name")
             return
 
-        logger.info(f"[MCP] 尝试调用工具: {tool_name}")
+        logger.info(f"[MCP] Đang thử gọi tool: {tool_name}")
 
         if tool_name in self._disabled_tool_names():
             await self._reply_error(
@@ -338,16 +338,16 @@ class McpServer:
         # 获取参数
         arguments = params.get("arguments", {})
 
-        logger.info(f"[MCP] 开始执行工具 {tool_name}, 参数: {arguments}")
+        logger.info(f"[MCP] Bắt đầu thực thi tool {tool_name}, tham số: {arguments}")
 
         # 异步调用工具
         try:
             result = await tool.call(arguments)
-            logger.info(f"[MCP] 工具 {tool_name} 执行成功，结果: {result}")
+            logger.info(f"[MCP] Tool {tool_name} thực thi thành công, kết quả: {result}")
             await self._reply_result(request_id, json.loads(result))
         except Exception as e:
             logger.error(
-                f"[MCP] 工具 {tool_name} 执行失败: {e}", exc_info=True
+                f"[MCP] Tool {tool_name} thực thi thất bại: {e}", exc_info=True
             )
             await self._reply_error(request_id, str(e))
 
@@ -383,13 +383,13 @@ class McpServer:
 
         result_len = len(json.dumps(result))
         logger.info(
-            f"[MCP] 发送成功响应: ID={request_id}, 结果长度={result_len}"
+            f"[MCP] Gửi phản hồi thành công: ID={request_id}, độ dài kết quả={result_len}"
         )
 
         if self._send_callback:
             await self._send_callback(json.dumps(payload))
         else:
-            logger.error("[MCP] 发送回调未设置!")
+            logger.error("[MCP] Callback gửi chưa được thiết lập!")
 
     async def _reply_error(self, request_id: int, message: str):
         """
@@ -402,7 +402,7 @@ class McpServer:
         }
 
         logger.error(
-            f"[MCP] 发送错误响应: ID={request_id}, 错误={message}"
+            f"[MCP] Gửi phản hồi lỗi: ID={request_id}, lỗi={message}"
         )
 
         if self._send_callback:

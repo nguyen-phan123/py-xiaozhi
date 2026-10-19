@@ -33,7 +33,7 @@ class CLIDisplay:
         self._log_handler_installed = False  # 日志处理器是否已安装
 
         # 仪表盘数据
-        self._dash_status = "待命"
+        self._dash_status = "Chờ lệnh"
         self._dash_connected = False
         self._dash_text = ""
         self._dash_music = ""
@@ -120,7 +120,7 @@ class CLIDisplay:
             sys.stdout.write("\x1b[2J\x1b[H")
             sys.stdout.flush()
 
-        print("正在关闭应用...\n")
+        print("Đang đóng ứng dụng...\n")
 
     # ========== 状态更新 ==========
 
@@ -163,7 +163,7 @@ class CLIDisplay:
                 if self._loop.is_running():
                     self._loop.call_soon_threadsafe(self._do_render)
             except Exception as e:
-                logging.getLogger(__name__).error(f"调度渲染失败: {e}")
+                logging.getLogger(__name__).error(f"Lập lịch render thất bại: {e}")
 
     def _do_render(self):
         """执行渲染（在事件循环中调用）."""
@@ -178,12 +178,12 @@ class CLIDisplay:
                 exc = t.exception()
                 if exc:
                     logging.getLogger(__name__).error(
-                        f"CLI 渲染任务异常: {exc}", exc_info=exc
+                        f"Tác vụ render CLI gặp lỗi ngoại lệ: {exc}", exc_info=exc
                     )
 
             task.add_done_callback(_on_done)
         except Exception as e:
-            logging.getLogger(__name__).error(f"创建渲染任务失败: {e}", exc_info=True)
+            logging.getLogger(__name__).error(f"Tạo tác vụ render thất bại: {e}", exc_info=True)
 
     async def _safe_render(self):
         """安全渲染（带锁）."""
@@ -207,15 +207,15 @@ class CLIDisplay:
             return s if len(s) <= limit else s[: limit - 1] + "…"
 
         # 构建状态行
-        mode_text = "自动" if self._dash_auto_mode else "手动"
-        conn_text = "已连接" if self._dash_connected else "未连接"
+        mode_text = "Tự động" if self._dash_auto_mode else "Thủ công"
+        conn_text = "Đã kết nối" if self._dash_connected else "Chưa kết nối"
 
         lines = [
-            f"状态: {trunc(self._dash_status)}",
-            f"连接: {conn_text} | 模式: {mode_text}",
-            f"表情: {self._dash_emotion}",
-            f"对话: {trunc(self._dash_text)}",
-            f"音乐: {trunc(self._dash_music) if self._dash_music else '—'}",
+            f"Trạng thái: {trunc(self._dash_status)}",
+            f"Kết nối: {conn_text} | Chế độ: {mode_text}",
+            f"Biểu cảm: {self._dash_emotion}",
+            f"Hội thoại: {trunc(self._dash_text)}",
+            f"Âm nhạc: {trunc(self._dash_music) if self._dash_music else '—'}",
         ]
 
         # 不显示日志行（日志仍被拦截，只是不在界面显示）
@@ -312,7 +312,7 @@ class CLIDisplay:
         # 输入提示
         self._goto(first_input_row, 1)
         sys.stdout.write("\x1b[2K")
-        prompt = "\x1b[1m\x1b[36m输入:\x1b[0m " if self._use_ansi else "输入: "
+        prompt = "\x1b[1m\x1b[36mNhập:\x1b[0m " if self._use_ansi else "Nhập: "
         sys.stdout.write(prompt)
 
         # 预留行
@@ -348,7 +348,7 @@ class CLIDisplay:
                     self._clear_input_area()
                     await self._render_dashboard()
                 else:
-                    cmd = await asyncio.to_thread(input, "输入: ")
+                    cmd = await asyncio.to_thread(input, "Nhập: ")
 
                 await self._handle_command(cmd.strip())
         except asyncio.CancelledError:
@@ -408,11 +408,11 @@ class CLIDisplay:
         cols, rows = self._term_size()
         separator_row = max(1, rows - self._input_area_lines + 1)
         first_input_row = min(rows, separator_row + 1)
-        prompt = "\x1b[1m\x1b[36m输入:\x1b[0m " if self._use_ansi else "输入: "
+        prompt = "\x1b[1m\x1b[36mNhập:\x1b[0m " if self._use_ansi else "Nhập: "
         self._goto(first_input_row, 1)
         sys.stdout.write("\x1b[2K")
         visible = content
-        max_len = max(1, cols - len("输入: ") - 1)
+        max_len = max(1, cols - len("Nhập: ") - 1)
         if len(visible) > max_len:
             visible = visible[-max_len:]
         sys.stdout.write(f"{prompt}{visible}")
@@ -429,7 +429,7 @@ class CLIDisplay:
 
     def show_help(self):
         """显示帮助."""
-        self._dash_text = "命令: r=开始/停止 | x=打断 | q=退出 | h=帮助 | 其他=发送文本"
+        self._dash_text = "Lệnh: r=bắt đầu/dừng | x=ngắt lời | q=thoát | h=trợ giúp | khác=gửi văn bản"
         self._schedule_render()
 
     # ========== 日志处理 ==========
@@ -452,7 +452,7 @@ class CLIDisplay:
                     self.display._log_lines.append(msg)
                     self.display._schedule_render()
                 except Exception as e:
-                    logging.getLogger(__name__).error(f"日志记录失败: {e}")
+                    logging.getLogger(__name__).error(f"Ghi log thất bại: {e}")
 
         handler = DisplayLogHandler(self)
         handler.setLevel(logging.INFO)

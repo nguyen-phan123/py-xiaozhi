@@ -47,7 +47,7 @@ class MusicPlayer:
         )
         self._bus = MusicEventBridge(self._engine, self)
 
-        logger.debug("MusicPlayer 实例已创建")
+        logger.debug("Instance MusicPlayer đã được tạo")
 
     # ----- PlaybackEngine hooks -----
 
@@ -105,10 +105,10 @@ class MusicPlayer:
         self._config = load_music_config()
         self._downloader.set_config(self._config)
         logger.debug(
-            "MusicPlayer 配置已加载: "
-            f"搜索={self._config['SEARCH_URL']}, "
-            f"直链={self._config['URL_API']}, "
-            f"平台={self._config['DEFAULT_SOURCE']}"
+            "Cấu hình MusicPlayer đã được tải: "
+            f"Tìm kiếm={self._config['SEARCH_URL']}, "
+            f"Link trực tiếp={self._config['URL_API']}, "
+            f"Nền tảng={self._config['DEFAULT_SOURCE']}"
         )
         return self._config
 
@@ -170,9 +170,9 @@ class MusicPlayer:
             duration = await MusicDecoder.get_duration(file_path)
             if duration > 0:
                 eng.total_duration = duration
-                logger.info(f"从音频文件获取准确时长: {duration:.2f}秒")
+                logger.info(f"Lấy thời lượng chính xác từ tệp âm thanh: {duration:.2f}s")
             elif eng.total_duration == 0:
-                logger.warning("无法获取音频时长")
+                logger.warning("Không thể lấy thời lượng âm thanh")
 
             success = await eng.start_playback(file_path)
             if success:
@@ -185,7 +185,7 @@ class MusicPlayer:
                 }
             return {"status": "error", "message": "播放失败"}
         except Exception as e:
-            logger.error(f"播放本地音乐失败: {e}", exc_info=True)
+            logger.error(f"Phát nhạc local thất bại: {e}", exc_info=True)
             return {"status": "error", "message": f"播放失败: {str(e)}"}
 
     async def search_and_play(self, song_name: str) -> dict:
@@ -215,7 +215,7 @@ class MusicPlayer:
             detail = self._downloader.last_error or "未知原因"
             return {"status": "error", "message": f"播放失败: {detail}"}
         except Exception as e:
-            logger.error(f"搜索播放失败: {e}", exc_info=True)
+            logger.error(f"Tìm kiếm và phát thất bại: {e}", exc_info=True)
             return {"status": "error", "message": f"操作失败: {str(e)}"}
 
     async def get_lyrics(self) -> dict:
@@ -247,8 +247,8 @@ class MusicPlayer:
                 f"当前歌曲: {eng.current_song}\n"
                 f"播放状态: {playing_state}\n"
                 f"暂停来源: {eng.pause_source or '无'} (tts=说话时临时暂停)\n"
-                f"总时长秒: {int(eng.total_duration)}\n"
-                f"当前位置秒: {int(position)}\n"
+                f"总时长s: {int(eng.total_duration)}\n"
+                f"当前位置s: {int(position)}\n"
                 f"播放时长: {self._format_time(eng.total_duration)}\n"
                 f"当前位置: {self._format_time(position)}\n"
                 f"播放进度: {progress}%\n"
@@ -278,7 +278,7 @@ class MusicPlayer:
         eng.current_lyric_index = idx
         display = format_lyric_display(text, position, eng.total_duration)
         await self._bus.emit_lyrics_update(display, self.lyrics[idx][0])
-        logger.debug(f"显示歌词: {text}")
+        logger.debug(f"Hiển thị lời bài hát: {text}")
 
     async def _fetch_lyrics(self, song_id: str):
         eng = self._engine
@@ -290,7 +290,7 @@ class MusicPlayer:
         if eng.total_duration == 0 and self.lyrics:
             last_time, _ = self.lyrics[-1]
             eng.total_duration = last_time + 5.0
-            logger.info(f"从歌词提取歌曲时长: {eng.total_duration}秒")
+            logger.info(f"Trích xuất thời lượng bài hát từ lời: {eng.total_duration}s")
 
     def _format_time(self, seconds: float) -> str:
         minutes = int(seconds) // 60
@@ -303,4 +303,4 @@ class MusicPlayer:
             if cache is not None and getattr(cache, "_ready", False):
                 cache.clean_temp()
         except Exception as e:
-            logger.debug(f"__del__ 清理临时缓存失败: {e}")
+            logger.debug(f"__del__ dọn dẹp cache tạm thời thất bại: {e}")

@@ -22,7 +22,7 @@ def launch_application(app_name: str) -> bool:
         bool: 启动是否成功
     """
     try:
-        logger.info(f"[MacLauncher] 启动应用程序: {app_name}")
+        logger.info(f"[MacLauncher] Khởi chạy ứng dụng: {app_name}")
 
         # 方法1: 使用open -a命令（安全的列表形式）
         try:
@@ -30,10 +30,10 @@ def launch_application(app_name: str) -> bool:
                 ["open", "-a", app_name],
                 start_new_session=True,
             )
-            logger.info(f"[MacLauncher] 使用open -a成功启动: {app_name}")
+            logger.info(f"[MacLauncher] Khởi chạy thành công bằng open -a: {app_name}")
             return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[MacLauncher] open -a启动失败: {app_name}")
+            logger.debug(f"[MacLauncher] Khởi chạy open -a thất bại: {app_name}")
 
         # 方法2: 直接使用应用程序名称
         try:
@@ -41,10 +41,10 @@ def launch_application(app_name: str) -> bool:
                 [app_name],
                 start_new_session=True,
             )
-            logger.info(f"[MacLauncher] 直接启动成功: {app_name}")
+            logger.info(f"[MacLauncher] Khởi chạy trực tiếp thành công: {app_name}")
             return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[MacLauncher] 直接启动失败: {app_name}")
+            logger.debug(f"[MacLauncher] Khởi chạy trực tiếp thất bại: {app_name}")
 
         # 方法3: 尝试Applications目录
         app_path = f"/Applications/{app_name}.app"
@@ -53,7 +53,7 @@ def launch_application(app_name: str) -> bool:
                 ["open", app_path],
                 start_new_session=True,
             )
-            logger.info(f"[MacLauncher] 通过Applications目录启动成功: {app_name}")
+            logger.info(f"[MacLauncher] Khởi chạy qua thư mục Applications thành công: {app_name}")
             return True
 
         # 方法4: 再次使用open -a（作为最终尝试，不使用osascript）
@@ -63,14 +63,14 @@ def launch_application(app_name: str) -> bool:
                 ["open", "-a", app_name, "--background"],
                 start_new_session=True,
             )
-            logger.info(f"[MacLauncher] 使用open -a(后台模式)启动成功: {app_name}")
+            logger.info(f"[MacLauncher] Khởi chạy thành công bằng open -a (chế độ nền): {app_name}")
             return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[MacLauncher] open -a(后台模式)启动失败: {app_name}")
+            logger.debug(f"[MacLauncher] Khởi chạy open -a (chế độ nền) thất bại: {app_name}")
 
-        logger.warning(f"[MacLauncher] 所有macOS启动方法都失败了: {app_name}")
+        logger.warning(f"[MacLauncher] Tất cả các phương pháp khởi chạy macOS đều thất bại: {app_name}")
         return False
 
     except Exception as e:
-        logger.error(f"[MacLauncher] macOS启动失败: {e}", exc_info=True)
+        logger.error(f"[MacLauncher] Khởi chạy macOS thất bại: {e}", exc_info=True)
         return False

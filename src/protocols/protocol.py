@@ -10,102 +10,102 @@ logger = get_logger()
 class Protocol:
     def __init__(self):
         self.session_id = ""
-        # 初始化回调函数为None
+        # Khởi tạo hàm callback là None
         self._on_incoming_json = None
         self._on_incoming_audio = None
         self._on_audio_channel_opened = None
         self._on_audio_channel_closed = None
         self._on_network_error = None
-        # 新增连接状态变化回调
+        # Thêm callback thay đổi trạng thái kết nối
         self._on_connection_state_changed = None
         self._on_reconnecting = None
 
-        # 连接状态与自动重连（公共，从子类上移）
+        # Trạng thái kết nối và tự động kết nối lại (dùng chung, chuyển từ lớp con lên)
         self._is_closing = False
         self._reconnect_attempts = 0
-        self._max_reconnect_attempts = 5  # 默认重连5次
-        self._auto_reconnect_enabled = False  # 默认禁用自动重连
+        self._max_reconnect_attempts = 5  # Mặc định thử kết nối lại 5 lần
+        self._auto_reconnect_enabled = False  # Mặc định tắt tự động kết nối lại
         self._connection_monitor_task = None
 
     def on_incoming_json(self, callback):
         """
-        设置JSON消息接收回调函数.
+        Thiết lập hàm callback nhận tin nhắn JSON.
         """
         self._on_incoming_json = callback
 
     def on_incoming_audio(self, callback):
         """
-        设置音频数据接收回调函数.
+        Thiết lập hàm callback nhận dữ liệu âm thanh.
         """
         self._on_incoming_audio = callback
 
     def on_audio_channel_opened(self, callback):
         """
-        设置音频通道打开回调函数.
+        Thiết lập hàm callback khi kênh âm thanh mở.
         """
         self._on_audio_channel_opened = callback
 
     def on_audio_channel_closed(self, callback):
         """
-        设置音频通道关闭回调函数.
+        Thiết lập hàm callback khi kênh âm thanh đóng.
         """
         self._on_audio_channel_closed = callback
 
     def on_network_error(self, callback):
         """
-        设置网络错误回调函数.
+        Thiết lập hàm callback xử lý lỗi mạng.
         """
         self._on_network_error = callback
 
     def on_connection_state_changed(self, callback):
-        """设置连接状态变化回调函数.
+        """Thiết lập hàm callback khi trạng thái kết nối thay đổi.
 
         Args:
-            callback: 回调函数，接收参数 (connected: bool, reason: str)
+            callback: Hàm callback, nhận các tham số (connected: bool, reason: str)
         """
         self._on_connection_state_changed = callback
 
     def on_reconnecting(self, callback):
-        """设置重连尝试回调函数.
+        """Thiết lập hàm callback cho các lần thử kết nối lại.
 
         Args:
-            callback: 回调函数，接收参数 (attempt: int, max_attempts: int)
+            callback: Hàm callback, nhận các tham số (attempt: int, max_attempts: int)
         """
         self._on_reconnecting = callback
 
     async def send_text(self, message):
         """
-        发送文本消息的抽象方法，需要在子类中实现.
+        Phương thức trừu tượng gửi tin nhắn văn bản, cần được triển khai trong lớp con.
         """
-        raise NotImplementedError("send_text方法必须由子类实现")
+        raise NotImplementedError("Phương thức send_text phải do lớp con triển khai")
 
     async def send_audio(self, data: bytes):
         """
-        发送音频数据的抽象方法，需要在子类中实现.
+        Phương thức trừu tượng gửi dữ liệu âm thanh, cần được triển khai trong lớp con.
         """
-        raise NotImplementedError("send_audio方法必须由子类实现")
+        raise NotImplementedError("Phương thức send_audio phải do lớp con triển khai")
 
     def is_audio_channel_opened(self) -> bool:
         """
-        检查音频通道是否打开的抽象方法，需要在子类中实现.
+        Phương thức trừu tượng kiểm tra kênh âm thanh có mở hay không, cần được triển khai trong lớp con.
         """
-        raise NotImplementedError("is_audio_channel_opened方法必须由子类实现")
+        raise NotImplementedError("Phương thức is_audio_channel_opened phải do lớp con triển khai")
 
     async def open_audio_channel(self) -> bool:
         """
-        打开音频通道的抽象方法，需要在子类中实现.
+        Phương thức trừu tượng mở kênh âm thanh, cần được triển khai trong lớp con.
         """
-        raise NotImplementedError("open_audio_channel方法必须由子类实现")
+        raise NotImplementedError("Phương thức open_audio_channel phải do lớp con triển khai")
 
     async def close_audio_channel(self):
         """
-        关闭音频通道的抽象方法，需要在子类中实现.
+        Phương thức trừu tượng đóng kênh âm thanh, cần được triển khai trong lớp con.
         """
-        raise NotImplementedError("close_audio_channel方法必须由子类实现")
+        raise NotImplementedError("Phương thức close_audio_channel phải do lớp con triển khai")
 
     async def send_abort_speaking(self, reason):
         """
-        发送中止语音的消息.
+        Gửi tin nhắn hủy bỏ giọng nói (abort speaking).
         """
         message = {"session_id": self.session_id, "type": "abort"}
         if reason == AbortReason.WAKE_WORD_DETECTED:
@@ -114,7 +114,7 @@ class Protocol:
 
     async def send_wake_word_detected(self, wake_word):
         """
-        发送检测到唤醒词的消息.
+        Gửi tin nhắn phát hiện từ đánh thức (wake word).
         """
         message = {
             "session_id": self.session_id,
@@ -126,7 +126,7 @@ class Protocol:
 
     async def send_start_listening(self, mode):
         """
-        发送开始监听的消息.
+        Gửi tin nhắn bắt đầu lắng nghe.
         """
         mode_map = {
             ListeningMode.REALTIME: "realtime",
@@ -143,28 +143,28 @@ class Protocol:
 
     async def send_stop_listening(self):
         """
-        发送停止监听的消息.
+        Gửi tin nhắn dừng lắng nghe.
         """
         message = {"session_id": self.session_id, "type": "listen", "state": "stop"}
         await self.send_text(json.dumps(message))
 
     async def send_iot_descriptors(self, descriptors):
         """
-        发送物联网设备描述信息.
+        Gửi thông tin mô tả thiết bị IoT.
         """
         try:
-            # 解析描述符数据
+            # Phân tích dữ liệu descriptor
             if isinstance(descriptors, str):
                 descriptors_data = json.loads(descriptors)
             else:
                 descriptors_data = descriptors
 
-            # 检查是否为数组
+            # Kiểm tra xem có phải là mảng không
             if not isinstance(descriptors_data, list):
                 logger.error("IoT descriptors should be an array")
                 return
 
-            # 为每个描述符发送单独的消息
+            # Gửi tin nhắn riêng cho từng descriptor
             for i, descriptor in enumerate(descriptors_data):
                 if descriptor is None:
                     logger.error(f"Failed to get IoT descriptor at index {i}")
@@ -192,7 +192,7 @@ class Protocol:
 
     async def send_iot_states(self, states):
         """
-        发送物联网设备状态信息.
+        Gửi thông tin trạng thái thiết bị IoT.
         """
         if isinstance(states, str):
             states_data = json.loads(states)
@@ -209,7 +209,7 @@ class Protocol:
 
     async def send_mcp_message(self, payload):
         """
-        发送MCP消息.
+        Gửi tin nhắn MCP.
         """
         if isinstance(payload, str):
             payload_data = json.loads(payload)
@@ -224,43 +224,43 @@ class Protocol:
 
         await self.send_text(json.dumps(message))
 
-    # ============ 连接状态检查（模板方法，子类实现） ============
+    # ============ Kiểm tra trạng thái kết nối (template method, lớp con triển khai) ============
 
     def _is_connected(self) -> bool:
-        """检查连接是否存活.
+        """Kiểm tra kết nối có còn hoạt động hay không.
 
-        子类必须实现该方法，返回当前协议连接的健康状态.
+        Lớp con bắt buộc phải triển khai phương thức này, trả về trạng thái sức khỏe của kết nối giao thức hiện tại.
 
         Returns:
-            bool: 连接存活返回 True，否则返回 False
+            bool: Trả về True nếu kết nối còn sống, ngược lại trả về False
         """
-        raise NotImplementedError("_is_connected方法必须由子类实现")
+        raise NotImplementedError("Phương thức _is_connected phải do lớp con triển khai")
 
-    # ============ 协议特定清理（模板方法，子类实现） ============
+    # ============ Dọn dẹp đặc thù theo giao thức (template method, lớp con triển khai) ============
 
     async def _do_cleanup(self):
-        """清理协议特定资源（不包括公共状态和监控任务）.
+        """Dọn dẹp tài nguyên đặc thù của giao thức (không bao gồm trạng thái dùng chung và tác vụ giám sát).
 
-        子类实现该方法时应：
-        - 关闭协议特定的网络连接（socket / websocket / mqtt client 等）
-        - 取消协议特定的后台任务（心跳、消息处理等）
-        - 重置协议特定的时间戳/状态
+        Khi lớp con triển khai phương thức này cần:
+        - Đóng kết nối mạng đặc thù của giao thức (socket / websocket / mqtt client v.v.)
+        - Hủy tác vụ nền đặc thù của giao thức (heartbeat, xử lý tin nhắn v.v.)
+        - Đặt lại timestamp/trạng thái đặc thù của giao thức
 
-        不要在此方法中：
-        - 设置 self.connected = False（基类 _handle_connection_loss 负责）
-        - 取消 self._connection_monitor_task（基类 _handle_connection_loss 负责）
+        Không thực hiện trong phương thức này:
+        - Đặt self.connected = False (lớp cơ sở _handle_connection_loss đảm nhận)
+        - Hủy self._connection_monitor_task (lớp cơ sở _handle_connection_loss đảm nhận)
         """
-        raise NotImplementedError("_do_cleanup方法必须由子类实现")
+        raise NotImplementedError("Phương thức _do_cleanup phải do lớp con triển khai")
 
-    # ============ 连接监控（公共，子类可覆盖 _monitor_interval） ============
+    # ============ Giám sát kết nối (dùng chung, lớp con có thể override _monitor_interval) ============
 
     @property
     def _monitor_interval(self) -> float:
-        """连接监控检查间隔（秒），子类可覆盖."""
+        """Khoảng thời gian kiểm tra giám sát kết nối (giây), lớp con có thể override."""
         return 5.0
 
     def _start_connection_monitor(self):
-        """启动连接健康监控后台任务."""
+        """Khởi động tác vụ nền giám sát sức khỏe kết nối."""
         if (
             self._connection_monitor_task is None
             or self._connection_monitor_task.done()
@@ -270,90 +270,90 @@ class Protocol:
             )
 
     async def _connection_monitor(self):
-        """连接健康状态监控协程.
+        """Coroutine giám sát trạng thái sức khỏe kết nối.
 
-        循环检查 self._is_connected() 返回值，
-        发现断开则调用 self._handle_connection_loss().
+        Lặp lại kiểm tra giá trị trả về của self._is_connected(),
+        nếu phát hiện mất kết nối thì gọi self._handle_connection_loss().
         """
         try:
             while not self._is_closing:
                 await asyncio.sleep(self._monitor_interval)
 
                 if not self._is_connected():
-                    logger.warning("检测到连接已断开")
-                    await self._handle_connection_loss("连接检测失败")
+                    logger.warning("Phát hiện kết nối đã bị ngắt")
+                    await self._handle_connection_loss("Kiểm tra kết nối thất bại")
                     break
 
         except asyncio.CancelledError:
-            logger.debug("连接监控任务被取消")
+            logger.debug("Tác vụ giám sát kết nối đã bị hủy")
         except Exception as e:
-            logger.error(f"连接监控异常: {e}", exc_info=True)
+            logger.error(f"Ngoại lệ giám sát kết nối: {e}", exc_info=True)
 
-    # ============ 自动重连（公共） ============
+    # ============ Tự động kết nối lại (dùng chung) ============
 
     def enable_auto_reconnect(self, enabled: bool = True, max_attempts: int = 5):
-        """启用或禁用自动重连功能.
+        """Bật hoặc tắt tính năng tự động kết nối lại.
 
         Args:
-            enabled: 是否启用自动重连
-            max_attempts: 最大重连尝试次数
+            enabled: Có bật tự động kết nối lại hay không
+            max_attempts: Số lần thử kết nối lại tối đa
         """
         self._auto_reconnect_enabled = enabled
         if enabled:
             self._max_reconnect_attempts = max_attempts
-            logger.info(f"启用自动重连，最大尝试次数: {max_attempts}")
+            logger.info(f"Bật tự động kết nối lại, số lần thử tối đa: {max_attempts}")
         else:
             self._max_reconnect_attempts = 0
-            logger.info("禁用自动重连")
+            logger.info("Tắt tự động kết nối lại")
 
     async def _handle_connection_loss(self, reason: str, *, clean: bool = False):
-        """处理连接丢失（公共逻辑）.
+        """Xử lý mất kết nối (logic dùng chung).
 
-        流程：
-        1. 更新连接状态
-        2. 取消连接监控任务
-        3. 调用子类 _do_cleanup() 清理协议特定资源
-        4. 通知观察者（状态变化、音频通道关闭）
-        5. 根据配置决定是否自动重连
+        Quy trình:
+        1. Cập nhật trạng thái kết nối
+        2. Hủy tác vụ giám sát kết nối
+        3. Gọi _do_cleanup() của lớp con để dọn dẹp tài nguyên đặc thù
+        4. Thông báo cho observer (thay đổi trạng thái, đóng kênh âm thanh)
+        5. Quyết định có tự động kết nối lại hay không dựa trên cấu hình
 
         Args:
-            clean: 服务端正常关闭（如会话结束）。只收回通道，
-                   不触发自动重连，也不上报网络错误。
+            clean: Đóng bình thường từ phía máy chủ (như kết thúc phiên). Chỉ thu hồi kênh,
+                   không kích hoạt kết nối lại tự động, cũng không báo cáo lỗi mạng.
         """
         if clean:
-            logger.info(f"连接已由服务端正常关闭: {reason}")
+            logger.info(f"Kết nối đã được server đóng bình thường: {reason}")
         else:
-            logger.warning(f"连接丢失: {reason}")
+            logger.warning(f"Mất kết nối: {reason}")
 
         was_connected = self.connected
         self.connected = False
 
-        # 取消连接监控任务
+        # Hủy tác vụ giám sát kết nối
         await self._cancel_monitor_task()
 
-        # 通知连接状态变化
+        # Thông báo thay đổi trạng thái kết nối
         if self._on_connection_state_changed and was_connected:
             try:
                 self._on_connection_state_changed(False, reason)
             except Exception as e:
-                logger.error(f"调用连接状态变化回调失败: {e}", exc_info=True)
+                logger.error(f"Gọi callback thay đổi trạng thái kết nối thất bại: {e}", exc_info=True)
 
-        # 调用子类协议特定清理
+        # Gọi dọn dẹp đặc thù theo giao thức của lớp con
         await self._do_cleanup()
 
-        # 通知音频通道关闭
+        # Thông báo đóng kênh âm thanh
         if self._on_audio_channel_closed:
             try:
                 await self._on_audio_channel_closed()
             except Exception as e:
-                logger.error(f"调用音频通道关闭回调失败: {e}", exc_info=True)
+                logger.error(f"Gọi callback đóng kênh âm thanh thất bại: {e}", exc_info=True)
 
-        # 服务端正常关闭：会话结束不算故障，不重连也不报错，
-        # 下次交互时按需重新 open_audio_channel
+        # Máy chủ đóng bình thường: kết thúc phiên không coi là sự cố, không kết nối lại và không báo lỗi,
+        # mở lại open_audio_channel theo nhu cầu trong lần tương tác kế tiếp
         if clean:
             return
 
-        # 根据配置决定是否尝试自动重连
+        # Quyết định có thử tự động kết nối lại hay không dựa theo cấu hình
         if (
             not self._is_closing
             and self._auto_reconnect_enabled
@@ -366,56 +366,56 @@ class Protocol:
                     self._auto_reconnect_enabled
                     and self._reconnect_attempts >= self._max_reconnect_attempts
                 ):
-                    await self._on_network_error(f"连接丢失且重连失败: {reason}")
+                    await self._on_network_error(f"Mất kết nối và thử kết nối lại thất bại: {reason}")
                 else:
-                    await self._on_network_error(f"连接丢失: {reason}")
+                    await self._on_network_error(f"Mất kết nối: {reason}")
 
     async def _attempt_reconnect(self, original_reason: str):
-        """尝试自动重连（公共逻辑）.
+        """Thử tự động kết nối lại (logic dùng chung).
 
-        使用指数退避策略，调用子类的 connect() 进行实际连接.
+        Sử dụng chiến lược exponential backoff, gọi connect() của lớp con để thực hiện kết nối thực tế.
         """
         self._reconnect_attempts += 1
 
-        # 通知开始重连
+        # Thông báo bắt đầu kết nối lại
         if self._on_reconnecting:
             try:
                 self._on_reconnecting(
                     self._reconnect_attempts, self._max_reconnect_attempts
                 )
             except Exception as e:
-                logger.error(f"调用重连回调失败: {e}", exc_info=True)
+                logger.error(f"Gọi callback kết nối lại thất bại: {e}", exc_info=True)
 
         logger.info(
-            f"尝试自动重连 ({self._reconnect_attempts}/{self._max_reconnect_attempts})"
+            f"Đang thử tự động kết nối lại ({self._reconnect_attempts}/{self._max_reconnect_attempts})"
         )
 
-        # 指数退避等待，最大30秒
+        # Chờ exponential backoff, tối đa 30 giây
         await asyncio.sleep(min(self._reconnect_attempts * 2, 30))
 
         try:
             success = await self.connect()
             if success:
-                logger.info("自动重连成功")
+                logger.info("Tự động kết nối lại thành công")
                 if self._on_connection_state_changed:
-                    self._on_connection_state_changed(True, "重连成功")
+                    self._on_connection_state_changed(True, "Kết nối lại thành công")
             else:
                 logger.warning(
-                    f"自动重连失败 ({self._reconnect_attempts}/{self._max_reconnect_attempts})"
+                    f"Tự động kết nối lại thất bại ({self._reconnect_attempts}/{self._max_reconnect_attempts})"
                 )
                 if self._reconnect_attempts >= self._max_reconnect_attempts:
                     if self._on_network_error:
                         await self._on_network_error(
-                            f"重连失败，已达到最大重连次数: {original_reason}"
+                            f"Kết nối lại thất bại, đã đạt số lần thử tối đa: {original_reason}"
                         )
         except Exception as e:
-            logger.error(f"重连过程中出错: {e}", exc_info=True)
+            logger.error(f"Lỗi trong quá trình kết nối lại: {e}", exc_info=True)
             if self._reconnect_attempts >= self._max_reconnect_attempts:
                 if self._on_network_error:
-                    await self._on_network_error(f"重连异常: {str(e)}")
+                    await self._on_network_error(f"Ngoại lệ khi kết nối lại: {str(e)}")
 
     async def _cancel_monitor_task(self):
-        """取消并等待连接监控任务完成."""
+        """Hủy và chờ tác vụ giám sát kết nối hoàn tất."""
         if self._connection_monitor_task and not self._connection_monitor_task.done():
             self._connection_monitor_task.cancel()
             try:
@@ -424,10 +424,10 @@ class Protocol:
                 pass
 
     def get_connection_info(self) -> dict:
-        """获取连接信息（基类实现，子类可扩展）.
+        """Lấy thông tin kết nối (triển khai ở lớp cơ sở, lớp con có thể mở rộng).
 
         Returns:
-            dict: 包含连接状态、重连次数等信息的字典
+            dict: Dictionary chứa thông tin trạng thái kết nối, số lần kết nối lại, v.v.
         """
         return {
             "is_closing": self._is_closing,

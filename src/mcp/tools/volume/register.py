@@ -22,7 +22,7 @@ def create_volume_controller() -> VolumeController | None:
     try:
         return VolumeController()
     except Exception as e:
-        logger.error(f"音量控制器初始化失败: {e}", exc_info=True)
+        logger.error(f"Khởi tạo bộ điều khiển âm lượng thất bại: {e}", exc_info=True)
         return None
 
 
@@ -41,34 +41,34 @@ def register_volume_tools(
     async def set_volume(args: dict[str, Any]) -> bool:
         try:
             volume = args["volume"]
-            logger.info(f"[VolumeTools] 设置音量到 {volume}")
+            logger.info(f"[VolumeTools] Đặt âm lượng thành {volume}")
             if not (0 <= volume <= 100):
-                logger.warning(f"[VolumeTools] 音量值超出范围: {volume}")
+                logger.warning(f"[VolumeTools] Giá trị âm lượng ngoài phạm vi: {volume}")
                 return False
             if controller is None:
-                logger.warning("[VolumeTools] 音量控制依赖不完整，无法设置音量")
+                logger.warning("[VolumeTools] Dependency điều khiển âm lượng không đầy đủ, không thể đặt âm lượng")
                 return False
             await asyncio.to_thread(controller.set_volume, volume)
-            logger.info(f"[VolumeTools] 音量设置成功: {volume}")
+            logger.info(f"[VolumeTools] Đặt âm lượng thành công: {volume}")
             return True
         except KeyError:
-            logger.error("[VolumeTools] 缺少volume参数")
+            logger.error("[VolumeTools] Thiếu tham số volume")
             return False
         except Exception as e:
-            logger.error(f"[VolumeTools] 设置音量失败: {e}", exc_info=True)
+            logger.error(f"[VolumeTools] Đặt âm lượng thất bại: {e}", exc_info=True)
             return False
 
     async def get_volume(args: dict[str, Any]) -> int:
         try:
-            logger.info("[VolumeTools] 获取当前音量")
+            logger.info("[VolumeTools] Lấy âm lượng hiện tại")
             if controller is None:
-                logger.warning("[VolumeTools] 音量控制依赖不完整，返回默认音量")
+                logger.warning("[VolumeTools] Dependency điều khiển âm lượng không đầy đủ, trả về âm lượng mặc định")
                 return VolumeController.DEFAULT_VOLUME
             current = await asyncio.to_thread(controller.get_volume)
-            logger.info(f"[VolumeTools] 当前音量: {current}")
+            logger.info(f"[VolumeTools] Âm lượng hiện tại: {current}")
             return current
         except Exception as e:
-            logger.error(f"[VolumeTools] 获取音量失败: {e}", exc_info=True)
+            logger.error(f"[VolumeTools] Lấy âm lượng thất bại: {e}", exc_info=True)
             return VolumeController.DEFAULT_VOLUME
 
     async def get_volume_status(args: dict[str, Any]) -> str:
@@ -88,7 +88,7 @@ def register_volume_tools(
                     "reason": "Dependencies not available",
                 }
         except Exception as e:
-            logger.warning(f"[VolumeTools] 获取音量状态失败: {e}", exc_info=True)
+            logger.warning(f"[VolumeTools] Lấy trạng thái âm lượng thất bại: {e}", exc_info=True)
             status = {
                 "volume": 50,
                 "muted": False,
@@ -140,7 +140,7 @@ def register_volume_tools(
     for tool in tools:
         add_tool(tool)
     logger.info(
-        "已注册 %d 个音量 MCP 工具（注入 VolumeController, available=%s）",
+        "Đã đăng ký %d MCP tool âm lượng (inject VolumeController, available=%s)",
         len(tools),
         controller is not None,
     )

@@ -1,6 +1,6 @@
-"""插件基类.
+"""Plugin cơ sở.
 
-使用 PluginContext 和 PluginCommands 接口与核心服务交互。
+Sử dụng interface PluginContext và PluginCommands để tương tác với các service lõi.
 """
 
 import asyncio
@@ -12,79 +12,79 @@ if TYPE_CHECKING:
 
 
 class Plugin:
-    """插件基类.
+    """Lớp cơ sở cho plugin.
 
-    插件通过 PluginContext 获取状态，通过 PluginCommands 执行操作。
+    Plugin lấy trạng thái thông qua PluginContext, thực thi thao tác thông qua PluginCommands.
 
-    属性:
-        name: 插件名称，用于依赖声明和日志
-        priority: 优先级，数值越小越优先（范围: 1-100）
-        requires: 依赖的插件名称列表，PluginManager 会自动注入
+    Thuộc tính:
+        name: Tên plugin, dùng cho khai báo phụ thuộc và ghi log
+        priority: Mức độ ưu tiên, giá trị càng nhỏ càng ưu tiên cao (phạm vi: 1-100)
+        requires: Danh sách tên plugin phụ thuộc, PluginManager sẽ tự động tiêm vào
 
-    用法:
+    Cách dùng:
         class MyPlugin(Plugin):
             name = "my_plugin"
             priority = 50
-            requires = ["audio"]  # 声明依赖 AudioPlugin
+            requires = ["audio"]  # Khai báo phụ thuộc vào AudioPlugin
 
             async def setup(self, ctx, cmd):
                 await super().setup(ctx, cmd)
-                # self.deps["audio"] 可获取 AudioPlugin 实例
+                # self.deps["audio"] có thể lấy instance AudioPlugin
     """
 
     name: str = "plugin"
-    priority: int = 50  # 优先级，数值越小越优先（范围: 1-100）
-    requires: List[str] = []  # 依赖的插件名称列表
+    priority: int = 50  # Mức độ ưu tiên, giá trị càng nhỏ càng ưu tiên cao (phạm vi: 1-100)
+    requires: List[str] = []  # Danh sách tên plugin phụ thuộc
 
     def __init__(self) -> None:
         self._started = False
         self._failed = False
         self._ctx: "PluginContext" = None
         self._cmd: "PluginCommands" = None
-        self._deps: dict[str, "Plugin"] = {}  # 依赖注入的插件实例
+        self._deps: dict[str, "Plugin"] = {}  # Các instance plugin được tiêm phụ thuộc
 
     @property
     def ctx(self) -> "PluginContext":
         """
-        获取插件上下文.
+        Lấy context của plugin.
         """
         return self._ctx
 
     @property
     def cmd(self) -> "PluginCommands":
         """
-        获取插件命令接口.
+        Lấy interface lệnh của plugin.
         """
         return self._cmd
 
     @property
     def deps(self) -> dict[str, "Plugin"]:
-        """获取依赖的插件实例."""
+        """Lấy các instance plugin phụ thuộc."""
         return self._deps
 
     @property
     def failed(self) -> bool:
-        """插件是否已标记为失败（setup/start 失败或依赖失败）."""
+        """Plugin đã bị đánh dấu thất bại hay chưa (setup/start thất bại hoặc dependency thất bại)."""
         return self._failed
 
     def mark_failed(self) -> None:
-        """标记插件失败，后续 start/notify 将被跳过."""
+        """Đánh dấu plugin thất bại, các bước start/notify tiếp theo sẽ bị bỏ qua."""
         self._failed = True
 
     def get_dep(self, name: str) -> Optional["Plugin"]:
-        """获取指定名称的依赖插件."""
+        """Lấy plugin phụ thuộc theo tên chỉ định."""
         return self._deps.get(name)
 
-    def _inject_dependency(self, name: str, plugin: "Plugin") -> None:
-        """注入依赖插件（由 PluginManager 调用）."""
+    def _inject_dependency(self, name: str, plugin: "Plugin"):
+        """Tiêm plugin phụ thuộc (được gọi bởi PluginManager)."""
         self._deps[name] = plugin
 
     async def setup(self, ctx: "PluginContext", cmd: "PluginCommands") -> None:
-        """插件准备阶段.
+        """Giai đoạn chuẩn bị plugin.
 
         Args:
-            ctx: 插件上下文（只读状态访问）
-            cmd: 插件命令接口（执行操作）
+            ctx: Context của plugin (truy cập trạng thái ở chế độ chỉ đọc)
+            cmd: Interface lệnh của plugin (thực thi thao tác)
         """
         self._ctx = ctx
         self._cmd = cmd
@@ -92,48 +92,48 @@ class Plugin:
 
     async def start(self) -> None:
         """
-        插件启动（通常在协议连接建立后调用）.
+        Khởi chạy plugin (thường được gọi sau khi kết nối giao thức được thiết lập).
         """
         self._started = True
         await asyncio.sleep(0)
 
     async def on_protocol_connected(self, protocol: Any) -> None:
         """
-        协议通道建立后的通知.
+        Thông báo sau khi kênh giao thức được thiết lập.
         """
         await asyncio.sleep(0)
 
     async def on_incoming_json(self, message: Any) -> None:
         """
-        收到JSON消息时的通知.
+        Thông báo khi nhận được tin nhắn JSON.
         """
         await asyncio.sleep(0)
 
     async def on_incoming_audio(self, data: bytes) -> None:
         """
-        收到音频数据时的通知.
+        Thông báo khi nhận được dữ liệu âm thanh.
         """
         await asyncio.sleep(0)
 
     async def on_device_state_changed(self, state: Any) -> None:
         """
-        设备状态变更通知.
+        Thông báo thay đổi trạng thái thiết bị.
         """
         await asyncio.sleep(0)
 
     async def stop(self) -> None:
         """
-        插件停止.
+        Dừng plugin.
         """
         self._started = False
         await asyncio.sleep(0)
 
     def register_resources(self, pool: "ResourcePool") -> None:
         """
-        向资源池注册清理函数。子类重写此方法以注册需要释放的资源。
-        资源按注册的逆序释放，先注册的后释放。
+        Đăng ký hàm dọn dẹp vào pool tài nguyên. Lớp con ghi đè phương thức này để đăng ký tài nguyên cần giải phóng.
+        Tài nguyên được giải phóng theo thứ tự ngược lại lúc đăng ký, đăng ký trước sẽ giải phóng sau.
 
         Args:
-            pool: 资源池实例
+            pool: Instance của pool tài nguyên
         """
         pass

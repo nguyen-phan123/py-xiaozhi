@@ -37,7 +37,7 @@ class SettingsScreen(ModalScreen[bool]):
     """配置编辑弹层；返回 True 表示已保存."""
 
     BINDINGS = [
-        Binding("escape", "cancel", "取消", show=True),
+        Binding("escape", "cancel", "Hủy", show=True),
     ]
 
     CSS = """
@@ -90,10 +90,10 @@ class SettingsScreen(ModalScreen[bool]):
 
     def compose(self) -> ComposeResult:
         with Vertical(id="settings-dialog"):
-            yield Static("设置", id="settings-title")
+            yield Static("Cài đặt", id="settings-title")
             yield Static(
-                "编辑后点「保存」写盘并热应用 | Esc 取消 | "
-                "choice 字段请填合法值（见占位提示）",
+                "Chỉnh sửa rồi nhấn「Lưu」để ghi đĩa và áp dụng | Esc Hủy | "
+                "Trường choice vui lòng điền giá trị hợp lệ (xem gợi ý)",
                 id="settings-hint",
             )
             with TabbedContent():
@@ -106,7 +106,7 @@ class SettingsScreen(ModalScreen[bool]):
                                     current = self._values.get(f.path, "")
                                     placeholder = f.help or f.path
                                     if f.kind == "choice" and f.choices:
-                                        placeholder = f"可选: {', '.join(f.choices)}"
+                                        placeholder = f"Tùy chọn: {', '.join(f.choices)}"
                                     elif f.kind == "bool":
                                         placeholder = "true / false"
                                     yield Input(
@@ -117,8 +117,8 @@ class SettingsScreen(ModalScreen[bool]):
                                     )
             yield Static("", id="settings-status")
             with Horizontal(id="settings-actions"):
-                yield Button("取消", id="btn-cancel", variant="default")
-                yield Button("保存", id="btn-save", variant="primary")
+                yield Button("Hủy", id="btn-cancel", variant="default")
+                yield Button("Lưu", id="btn-save", variant="primary")
 
     def _collect_values(self) -> dict[str, str]:
         out: dict[str, str] = {}
@@ -188,12 +188,12 @@ class XiaozhiTuiApp(App[None]):
     """
 
     BINDINGS = [
-        Binding("ctrl+c", "quit_app", "退出", show=True, priority=True),
-        Binding("f2", "open_settings", "设置", show=True),
-        Binding("f1", "show_help", "帮助", show=True),
+        Binding("ctrl+c", "quit_app", "Thoát", show=True, priority=True),
+        Binding("f2", "open_settings", "Cài đặt", show=True),
+        Binding("f1", "show_help", "Trợ giúp", show=True),
     ]
 
-    status_text: reactive[str] = reactive("待命")
+    status_text: reactive[str] = reactive("Chờ lệnh")
     connected: reactive[bool] = reactive(False)
     auto_mode: reactive[bool] = reactive(False)
     chat_text: reactive[str] = reactive("")
@@ -215,15 +215,15 @@ class XiaozhiTuiApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         with Vertical(id="status-panel"):
-            yield Static("状态: 待命", id="status-line")
-            yield Static("连接: 未连接 | 模式: 手动 | 表情: neutral", id="meta-line")
-            yield Static("对话: —", id="chat-line")
-            yield Static("音乐: —", id="music-line")
+            yield Static("Trạng thái: Chờ lệnh", id="status-line")
+            yield Static("Kết nối: Chưa kết nối | Chế độ: Thủ công | Biểu cảm: neutral", id="meta-line")
+            yield Static("Hội thoại: —", id="chat-line")
+            yield Static("Âm nhạc: —", id="music-line")
         yield RichLog(id="log-panel", highlight=True, markup=True, max_lines=500)
         with Horizontal(id="input-row"):
             yield Input(
                 placeholder=(
-                    "输入文本发送 | r 对话 | x 打断 | s 设置 | q 退出 | h 帮助"
+                    "Nhập văn bản gửi | r hội thoại | x ngắt lời | s cài đặt | q thoát | h trợ giúp"
                 ),
                 id="cmd-input",
             )
@@ -235,7 +235,7 @@ class XiaozhiTuiApp(App[None]):
         self._refresh_status_widgets()
         self.write_log(
             f"[bold cyan]{SystemConstants.APP_DISPLAY_NAME} TUI[/]  "
-            "F2 设置 · F1 帮助 · Ctrl+C 退出"
+            "F2 Cài đặt · F1 Trợ giúp · Ctrl+C Thoát"
         )
 
     def watch_status_text(self, _value: str) -> None:
@@ -258,17 +258,17 @@ class XiaozhiTuiApp(App[None]):
 
     def _refresh_status_widgets(self) -> None:
         try:
-            conn = "已连接" if self.connected else "未连接"
-            mode = "自动" if self.auto_mode else "手动"
-            self.query_one("#status-line", Static).update(f"状态: {self.status_text}")
+            conn = "Đã kết nối" if self.connected else "Chưa kết nối"
+            mode = "Tự động" if self.auto_mode else "Thủ công"
+            self.query_one("#status-line", Static).update(f"Trạng thái: {self.status_text}")
             self.query_one("#meta-line", Static).update(
-                f"连接: {conn} | 模式: {mode} | 表情: {self.emotion}"
+                f"Kết nối: {conn} | Chế độ: {mode} | Biểu cảm: {self.emotion}"
             )
             self.query_one("#chat-line", Static).update(
-                f"对话: {self.chat_text or '—'}"
+                f"Hội thoại: {self.chat_text or '—'}"
             )
             self.query_one("#music-line", Static).update(
-                f"音乐: {self.music_line or '—'}"
+                f"Âm nhạc: {self.music_line or '—'}"
             )
         except Exception:
             pass
@@ -310,25 +310,25 @@ class XiaozhiTuiApp(App[None]):
 
     def action_show_help(self) -> None:
         self.write_log(
-            "[bold cyan]帮助[/]\n"
-            "  文本 → 发送给助手\n"
-            "  r → 开始/停止对话\n"
-            "  x → 打断\n"
-            "  s / F2 → 设置\n"
-            "  q / Ctrl+C → 退出\n"
-            "  h / F1 → 帮助"
+            "[bold cyan]Trợ giúp[/]\n"
+            "  Văn bản → Gửi cho trợ lý\n"
+            "  r → Bắt đầu/Dừng hội thoại\n"
+            "  x → Ngắt lời\n"
+            "  s / F2 → Cài đặt\n"
+            "  q / Ctrl+C → Thoát\n"
+            "  h / F1 → Trợ giúp"
         )
 
     def action_open_settings(self) -> None:
         def _done(saved: bool | None) -> None:
             if saved:
-                self.write_log("[green]配置已保存，正在热应用…[/]")
+                self.write_log("[green]Cấu hình đã lưu, đang áp dụng nóng…[/]")
                 if self._on_settings_saved:
                     try:
                         self._on_settings_saved()
                     except Exception as e:
-                        logger.error(f"设置保存回调失败: {e}", exc_info=True)
-                        self.write_log(f"[red]热应用失败: {e}[/]")
+                        logger.error(f"Callback lưu cài đặt thất bại: {e}", exc_info=True)
+                        self.write_log(f"[red]Áp dụng nóng thất bại: {e}[/]")
 
         self.push_screen(SettingsScreen(), _done)
 

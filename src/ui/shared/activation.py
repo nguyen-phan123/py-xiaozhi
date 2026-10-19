@@ -26,12 +26,12 @@ class BaseActivation:
     async def _core_activate(self) -> bool:
         """核心激活：取码 → UI 展示 → service.activate（含剪贴板/播报副作用）."""
         if self._service is None:
-            self._show_error("激活服务未初始化")
+            self._show_error("Dịch vụ kích hoạt chưa được khởi tạo")
             return False
 
         data = self._service.get_activation_data()
         if not data:
-            self._show_error("未获取到激活数据")
+            self._show_error("Không lấy được dữ liệu kích hoạt")
             return False
 
         self._show_code(data)

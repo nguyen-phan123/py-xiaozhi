@@ -12,7 +12,7 @@ AppWindow {
     height: 340
     minimumWidth: 450
     minimumHeight: 300
-    title: "设备激活"
+    title: "Kích hoạt thiết bị"
     visible: true
 
     // 信号
@@ -24,7 +24,7 @@ AppWindow {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        title: "设备激活"
+        title: "Kích hoạt thiết bị"
         showMaximize: false
         onMinimizeClicked: root.showMinimized()
         onCloseClicked: root.close()
@@ -76,7 +76,7 @@ AppWindow {
                 spacing: Theme.spacingMd
 
                 Text {
-                    text: "设备信息"
+                    text: "Thông tin thiết bị"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMd
                     font.weight: Font.Medium
@@ -91,14 +91,14 @@ AppWindow {
 
                     // 序列号
                     Text {
-                        text: "设备序列号"
+                        text: "Số seri thiết bị"
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSm
                         color: Theme.textPlaceholder
                     }
 
                     Text {
-                        text: "MAC 地址"
+                        text: "Địa chỉ MAC"
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSm
                         color: Theme.textPlaceholder
@@ -134,7 +134,7 @@ AppWindow {
                 spacing: Theme.spacingLg
 
                 Text {
-                    text: "激活验证码"
+                    text: "Mã xác thực"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMd
                     font.weight: Font.Medium
@@ -163,7 +163,7 @@ AppWindow {
 
                 // 复制按钮
                 XButton {
-                    text: "复制"
+                    text: "Sao chép"
                     enabled: activationModel ? activationModel.activationCode !== "------" : false
                     onClicked: {
                         if (typeof activationController !== 'undefined') {
@@ -183,7 +183,7 @@ AppWindow {
             XButton {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                text: "打开激活页面"
+                text: "Mở trang kích hoạt"
                 enabled: activationModel ? !activationModel.isActivated : true
                 onClicked: {
                     if (typeof activationController !== 'undefined') {
@@ -197,8 +197,8 @@ AppWindow {
         Text {
             Layout.fillWidth: true
             text: (activationModel && activationModel.isActivated)
-                ? "设备已激活，窗口即将关闭..."
-                : "请在激活页面输入验证码完成设备激活"
+                ? "Thiết bị đã kích hoạt, cửa sổ sẽ đóng sau giây lát..."
+                : "Vui lòng nhập mã xác thực trên trang web để hoàn tất kích hoạt"
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSm
             color: Theme.textPlaceholder
@@ -240,7 +240,7 @@ AppWindow {
         Text {
             id: toastText
             anchors.centerIn: parent
-            text: "验证码已复制"
+            text: "Đã sao chép mã xác thực"
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSm
             color: "white"

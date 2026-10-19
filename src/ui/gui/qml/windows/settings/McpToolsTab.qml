@@ -97,7 +97,7 @@ ScrollView {
         spacing: Theme.spacingLg
 
         Text {
-            text: "MCP 工具"
+            text: "Công cụ MCP"
             font.pixelSize: Theme.fontSizeXl
             font.weight: Font.DemiBold
             color: Theme.textPrimary
@@ -105,7 +105,7 @@ ScrollView {
 
         Text {
             Layout.fillWidth: true
-            text: "控制哪些工具暴露给服务端。关闭后不出现在 tools/list，也无法调用。保存后若已连接将自动重连以更新列表。"
+            text: "Kiểm soát các công cụ hiển thị cho máy chủ. Khi tắt sẽ không xuất hiện trong tools/list và không thể gọi. Sau khi lưu, nếu đang kết nối sẽ tự động kết nối lại để cập nhật danh sách."
             font.pixelSize: Theme.fontSizeXs
             color: Theme.textSecondary
             wrapMode: Text.WordWrap
@@ -141,14 +141,14 @@ ScrollView {
                     Item { Layout.fillWidth: true }
 
                     GroupActionButton {
-                        text: "全开"
+                        text: "Bật hết"
                         onClicked: {
                             if (settingsModel)
                                 settingsModel.setMcpToolGroupEnabled(groupBlock.modelData.group, true)
                         }
                     }
                     GroupActionButton {
-                        text: "全关"
+                        text: "Tắt hết"
                         onClicked: {
                             if (settingsModel)
                                 settingsModel.setMcpToolGroupEnabled(groupBlock.modelData.group, false)

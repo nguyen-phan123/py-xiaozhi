@@ -22,7 +22,7 @@ class CliActivation(BaseActivation):
         self._print_header()
 
         if not self.needs_activation():
-            self._log("设备已激活，无需进一步操作")
+            self._log("Thiết bị đã được kích hoạt, không cần thao tác thêm")
             self._print_success()
             return True
 
@@ -30,7 +30,7 @@ class CliActivation(BaseActivation):
         try:
             return await self._core_activate()
         except KeyboardInterrupt:
-            self._log("\n用户中断激活流程")
+            self._log("\nNgười dùng đã hủy quy trình kích hoạt")
             return False
 
     # ---- BaseActivation 展示方法 ----
@@ -51,7 +51,7 @@ class CliActivation(BaseActivation):
 
     def _print_header(self):
         print("\n" + "=" * 60)
-        print(f"{SystemConstants.APP_DISPLAY_NAME} - 设备激活")
+        print(f"{SystemConstants.APP_DISPLAY_NAME} - Kích hoạt thiết bị")
         print("=" * 60)
 
     def _print_device_info(self):
@@ -60,59 +60,59 @@ class CliActivation(BaseActivation):
         mac = self._service.get_mac_address() or "--"
         status = self._service.get_activation_status()
 
-        print("\n设备信息:")
-        print(f"  序列号: {serial}")
-        print(f"  MAC地址: {mac}")
+        print("\nThông tin thiết bị:")
+        print(f"  Số seri: {serial}")
+        print(f"  Địa chỉ MAC: {mac}")
 
         local = status.get("local_activated", False)
         server = status.get("server_activated", False)
         consistent = status.get("status_consistent", True)
 
         if not consistent:
-            status_text = "需重新激活" if local and not server else "已自动修复"
+            status_text = "Cần kích hoạt lại" if local and not server else "Đã tự động sửa"
         else:
-            status_text = "已激活" if local else "未激活"
+            status_text = "Đã kích hoạt" if local else "Chưa kích hoạt"
 
-        print(f"  状态: {status_text}")
+        print(f"  Trạng thái: {status_text}")
 
     def _print_activation_info(self, data: dict):
         """打印激活信息."""
         code = data.get("code", "------")
-        message = data.get("message", "请访问 xiaozhi.me 输入验证码")
+        message = data.get("message", "Vui lòng truy cập xiaozhi.me để nhập mã xác thực")
 
         print("\n" + "-" * 60)
-        print("激活信息")
+        print("Thông tin kích hoạt")
         print("-" * 60)
-        print(f"验证码: {' '.join(code)}")
-        print(f"说明: {message}")
+        print(f"Mã xác thực: {' '.join(code)}")
+        print(f"Hướng dẫn: {message}")
         print("-" * 60)
-        print("\n激活步骤:")
-        print("  1. 打开浏览器访问 xiaozhi.me")
-        print("  2. 登录您的账户")
-        print("  3. 选择添加设备")
-        print(f"  4. 输入验证码: {code}")
-        print("  5. 确认添加设备")
+        print("\nCác bước kích hoạt:")
+        print("  1. Mở trình duyệt và truy cập xiaozhi.me")
+        print("  2. Đăng nhập vào tài khoản của bạn")
+        print("  3. Chọn thêm thiết bị mới")
+        print(f"  4. Nhập mã xác thực: {code}")
+        print("  5. Xác nhận thêm thiết bị")
 
     def _print_success(self):
         print("\n" + "=" * 60)
-        print("设备激活成功!")
+        print("Kích hoạt thiết bị thành công!")
         print("=" * 60)
-        print("设备已成功添加到您的账户")
-        print(f"正在启动{SystemConstants.APP_DISPLAY_NAME}...")
+        print("Thiết bị đã được thêm vào tài khoản của bạn")
+        print(f"Đang khởi động {SystemConstants.APP_DISPLAY_NAME}...")
         print("=" * 60 + "\n")
 
     def _print_failure(self):
         print("\n" + "=" * 60)
-        print("设备激活失败")
+        print("Kích hoạt thiết bị thất bại")
         print("=" * 60)
-        print("可能的原因:")
-        print("  - 网络连接不稳定")
-        print("  - 验证码输入错误或已过期")
-        print("  - 服务器暂时不可用")
-        print("\n解决方案:")
-        print("  - 检查网络连接")
-        print("  - 重新运行程序获取新验证码")
-        print("  - 确保正确输入验证码")
+        print("Nguyên nhân có thể:")
+        print("  - Kết nối mạng không ổn định")
+        print("  - Mã xác thực sai hoặc đã hết hạn")
+        print("  - Máy chủ tạm thời không khả dụng")
+        print("\nGiải pháp:")
+        print("  - Kiểm tra lại kết nối mạng")
+        print("  - Chạy lại ứng dụng để lấy mã xác thực mới")
+        print("  - Đảm bảo nhập chính xác mã xác thực")
         print("=" * 60 + "\n")
 
     def _log(self, message: str):

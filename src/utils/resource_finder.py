@@ -321,7 +321,7 @@ def _log_migration(kind: str, src: Path, dst: Path, r: dict) -> None:
         from src.logging import get_logger
 
         get_logger().info(
-            "路径迁移 %s: %s -> %s (copied=%s, ok=%s)",
+            "Di chuyển đường dẫn %s: %s -> %s (copied=%s, ok=%s)",
             kind,
             src,
             dst,

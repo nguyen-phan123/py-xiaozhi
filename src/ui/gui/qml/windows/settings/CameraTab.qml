@@ -37,7 +37,7 @@ ScrollView {
         }
         function onStatusMessage(message) {
             root.testResult = message
-            if (message.startsWith("[成功]") || message.startsWith("[失败]") || message.startsWith("[错误]")) {
+            if (message.startsWith("[Thành công]") || message.startsWith("[Thất bại]") || message.startsWith("[Lỗi]")) {
                 root.cameraTesting = false
             }
         }
@@ -49,7 +49,7 @@ ScrollView {
 
         // 页面标题
         Text {
-            text: "摄像头设置"
+            text: "Cài đặt camera"
             font.pixelSize: Theme.fontSizeXl
             font.weight: Font.DemiBold
             color: Theme.textPrimary
@@ -61,7 +61,7 @@ ScrollView {
             spacing: Theme.spacingMd
 
             Text {
-                text: "设备选择"
+                text: "Chọn thiết bị"
                 font.pixelSize: Theme.fontSizeMd
                 font.weight: Font.Medium
                 color: Theme.textSecondary
@@ -72,7 +72,7 @@ ScrollView {
                 spacing: Theme.spacingMd
 
                 Text {
-                    text: "摄像头"
+                    text: "Camera"
                     font.pixelSize: Theme.fontSizeSm
                     color: Theme.textSecondary
                     Layout.preferredWidth: 80
@@ -89,7 +89,7 @@ ScrollView {
                 }
 
                 Button {
-                    text: root.cameraTesting ? "测试中..." : "测试"
+                    text: root.cameraTesting ? "Đang thử..." : "Kiểm tra"
                     enabled: !root.cameraTesting
                     Layout.preferredWidth: 70
                     Layout.preferredHeight: 32
@@ -115,7 +115,7 @@ ScrollView {
                 }
 
                 Button {
-                    text: "刷新"
+                    text: "Làm mới"
                     Layout.preferredWidth: 70
                     Layout.preferredHeight: 32
 
@@ -150,7 +150,7 @@ ScrollView {
             spacing: Theme.spacingMd
 
             Text {
-                text: "视频参数"
+                text: "Tham số video"
                 font.pixelSize: Theme.fontSizeMd
                 font.weight: Font.Medium
                 color: Theme.textSecondary
@@ -163,7 +163,7 @@ ScrollView {
                 columnSpacing: Theme.spacingLg
 
                 Text {
-                    text: "分辨率"
+                    text: "Độ phân giải"
                     font.pixelSize: Theme.fontSizeSm
                     color: Theme.textSecondary
                     Layout.preferredWidth: 80
@@ -201,7 +201,7 @@ ScrollView {
                 }
 
                 Text {
-                    text: "帧率"
+                    text: "Tốc độ khung hình"
                     font.pixelSize: Theme.fontSizeSm
                     color: Theme.textSecondary
                     Layout.preferredWidth: 80
@@ -241,7 +241,7 @@ ScrollView {
             spacing: Theme.spacingMd
 
             Text {
-                text: "视觉语言模型 (VL API)"
+                text: "Mô hình ngôn ngữ thị giác (VL API)"
                 font.pixelSize: Theme.fontSizeMd
                 font.weight: Font.Medium
                 color: Theme.textSecondary
@@ -254,7 +254,7 @@ ScrollView {
                 columnSpacing: Theme.spacingLg
 
                 Text {
-                    text: "API 地址"
+                    text: "Địa chỉ API"
                     font.pixelSize: Theme.fontSizeSm
                     color: Theme.textSecondary
                     Layout.preferredWidth: 80
@@ -288,7 +288,7 @@ ScrollView {
                 }
 
                 Text {
-                    text: "模型"
+                    text: "Mô hình"
                     font.pixelSize: Theme.fontSizeSm
                     color: Theme.textSecondary
                     Layout.preferredWidth: 80
@@ -320,12 +320,12 @@ ScrollView {
         Rectangle {
             Layout.fillWidth: true
             height: 48
-            color: root.testResult.startsWith("[成功]") ? Theme.successLight :
-                   root.testResult.startsWith("[失败]") ? Theme.errorLight :
-                   root.testResult.startsWith("[错误]") ? Theme.errorLight : Theme.backgroundSecondary
-            border.color: root.testResult.startsWith("[成功]") ? Theme.successBorder :
-                          root.testResult.startsWith("[失败]") ? Theme.errorBorder :
-                          root.testResult.startsWith("[错误]") ? Theme.errorBorder : Theme.divider
+            color: root.testResult.startsWith("[Thành công]") ? Theme.successLight :
+                   root.testResult.startsWith("[Thất bại]") ? Theme.errorLight :
+                   root.testResult.startsWith("[Lỗi]") ? Theme.errorLight : Theme.backgroundSecondary
+            border.color: root.testResult.startsWith("[Thành công]") ? Theme.successBorder :
+                          root.testResult.startsWith("[Thất bại]") ? Theme.errorBorder :
+                          root.testResult.startsWith("[Lỗi]") ? Theme.errorBorder : Theme.divider
             radius: Theme.radiusMd
             visible: root.testResult.length > 0 || root.cameraTesting
 
@@ -343,11 +343,11 @@ ScrollView {
 
                 Text {
                     Layout.fillWidth: true
-                    text: root.cameraTesting ? "正在测试摄像头..." : root.testResult
+                    text: root.cameraTesting ? "Đang kiểm tra camera..." : root.testResult
                     font.pixelSize: Theme.fontSizeSm
-                    color: root.testResult.startsWith("[成功]") ? Theme.success :
-                           root.testResult.startsWith("[失败]") ? Theme.error :
-                           root.testResult.startsWith("[错误]") ? Theme.error : Theme.textSecondary
+                    color: root.testResult.startsWith("[Thành công]") ? Theme.success :
+                           root.testResult.startsWith("[Thất bại]") ? Theme.error :
+                           root.testResult.startsWith("[Lỗi]") ? Theme.error : Theme.textSecondary
                     elide: Text.ElideRight
                 }
             }
@@ -356,7 +356,7 @@ ScrollView {
         // 提示信息
         Text {
             Layout.fillWidth: true
-            text: "摄像头用于视觉识别功能。如需使用本地 VL 模型，请配置 API 地址和密钥。"
+            text: "Camera dùng cho tính năng nhận diện thị giác. Để dùng mô hình VL cục bộ, vui lòng cấu hình địa chỉ API và khóa bí mật."
             font.pixelSize: Theme.fontSizeSm
             color: Theme.textPlaceholder
             wrapMode: Text.WordWrap

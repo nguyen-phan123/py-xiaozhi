@@ -104,7 +104,7 @@ class PluginSubprocessSession:
             raise RuntimeError("bootstrap 返回 tools 非列表")
         self._tools_meta = tools
         logger.info(
-            "[MCP插件:%s] subprocess 已启动 pid=%s tools=%d",
+            "[MCP Plugin:%s] subprocess đã khởi động pid=%s tools=%d",
             self.plugin_id,
             self._proc.pid if self._proc else "?",
             len(tools),
@@ -143,7 +143,7 @@ class PluginSubprocessSession:
             for line in proc.stderr:
                 line = line.rstrip()
                 if line:
-                    logger.warning("[MCP插件:%s:stderr] %s", self.plugin_id, line)
+                    logger.warning("[MCP Plugin:%s:stderr] %s", self.plugin_id, line)
         except Exception:
             pass
 
@@ -250,7 +250,7 @@ class PluginSubprocessSession:
                     proc.kill()
         except Exception as e:
             logger.debug(
-                "[MCP插件:%s] 结束子进程: %s", self.plugin_id, e, exc_info=True
+                "[MCP Plugin:%s] Kết thúc tiến trình con: %s", self.plugin_id, e, exc_info=True
             )
             try:
                 proc.kill()
@@ -309,7 +309,7 @@ def register_subprocess_plugin_tools(
             raise RuntimeError(f"工具名未使用前缀 {prefix}: {name}")
         if prefix and not name.startswith(str(prefix)):
             logger.warning(
-                "[MCP插件:%s] 工具名未使用前缀 %s: %s",
+                "[MCP Plugin:%s] Tên tool không dùng tiền tố %s: %s",
                 session.plugin_id,
                 prefix,
                 name,
@@ -331,7 +331,7 @@ def register_subprocess_plugin_tools(
         if tool_owner is not None:
             tool_owner[name] = session.plugin_id
         logger.info(
-            "[MCP插件:%s] 注册代理工具(subprocess): %s", session.plugin_id, name
+            "[MCP Plugin:%s] Đăng ký proxy tool (subprocess): %s", session.plugin_id, name
         )
     return names
 

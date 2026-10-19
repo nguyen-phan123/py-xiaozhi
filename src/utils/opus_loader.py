@@ -86,7 +86,7 @@ def setup_opus() -> bool:
             os.environ["PATH"] = lib_dir + os.pathsep + os.environ.get("PATH", "")
 
         if _try_load(bundled_path):
-            logger.debug(f"使用内置 opus: {bundled_path}")
+            logger.debug(f"Sử dụng opus tích hợp: {bundled_path}")
             _patch_find_library(str(bundled_path))
             _opus_loaded = True
             return True
@@ -94,13 +94,13 @@ def setup_opus() -> bool:
     # 2. 兜底：系统 opus
     system_path = _find_system_opus()
     if system_path and _try_load(system_path):
-        logger.debug(f"使用系统 opus: {system_path}")
+        logger.debug(f"Sử dụng opus của hệ thống: {system_path}")
         _patch_find_library(system_path)
         _opus_loaded = True
         return True
 
     logger.warning(
-        "未找到 opus 库，音频编解码可能无法工作。"
-        "Linux/macOS 可通过包管理器安装: brew install opus / apt install libopus0"
+        "Không tìm thấy thư viện opus, codec âm thanh có thể không hoạt động."
+        "Linux/macOS có thể cài đặt qua trình quản lý gói: brew install opus / apt install libopus0"
     )
     return False

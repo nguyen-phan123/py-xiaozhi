@@ -31,7 +31,7 @@ class GpioViewManager:
 
         # 状态
         self._auto_mode = False
-        self._status = "待命"
+        self._status = "Chờ lệnh"
         self._connected = False
         self._chat_text = ""
         self._music_line = ""
@@ -42,7 +42,7 @@ class GpioViewManager:
         Args:
             mode: 运行模式（GPIO 模式下忽略此参数）
         """
-        logger.info("GpioViewManager: 启动 GPIO 界面...")
+        logger.info("GpioViewManager: Khởi động giao diện GPIO...")
         self._running = True
         self._loop = asyncio.get_running_loop()
 
@@ -54,27 +54,27 @@ class GpioViewManager:
                 on_key3_pressed=self._on_key3,
                 on_key4_pressed=self._on_key4,
             )
-            logger.info("GPIO 按键已就绪")
-            logger.info("KEY1: 开始/停止对话")
-            logger.info("KEY2: 中断语音")
-            logger.info("KEY3: 切换模式")
-            logger.info("KEY4: 退出程序")
+            logger.info("Phím bấm GPIO đã sẵn sàng")
+            logger.info("KEY1: Bắt đầu/dừng đối thoại")
+            logger.info("KEY2: Ngắt giọng nói")
+            logger.info("KEY3: Chuyển đổi chế độ")
+            logger.info("KEY4: Thoát chương trình")
         else:
-            logger.warning("GPIO 不可用，按键功能已禁用")
+            logger.warning("GPIO không khả dụng, tính năng phím bấm đã bị vô hiệu hóa")
 
         # 保持运行（事件驱动）
         try:
             while self._running:
                 await asyncio.sleep(1)
         except asyncio.CancelledError:
-            logger.info("GpioViewManager: 任务被取消")
+            logger.info("GpioViewManager: Tác vụ bị hủy")
 
     async def close(self):
         """关闭 GPIO 视图."""
-        logger.info("GpioViewManager: 正在关闭...")
+        logger.info("GpioViewManager: Đang đóng...")
         self._running = False
         self._gpio_input.close()
-        logger.info("GpioViewManager: 已关闭")
+        logger.info("GpioViewManager: Đã đóng")
 
     # ========== 按键回调 ==========
 
@@ -82,25 +82,25 @@ class GpioViewManager:
         """KEY1: 开始/停止对话."""
         if self._auto_mode:
             self._safe_emit(Events.UI_AUTO_START)
-            logger.info("[KEY1] 自动模式：切换开始/停止对话")
+            logger.info("[KEY1] Chế độ tự động: chuyển đổi bắt đầu/dừng đối thoại")
         else:
             self._safe_emit(Events.UI_MANUAL_TOGGLE)
-            logger.info("[KEY1] 手动模式：切换录音")
+            logger.info("[KEY1] Chế độ thủ công: chuyển đổi ghi âm")
 
     def _on_key2(self):
         """KEY2: 打断."""
         self._safe_emit(Events.UI_ABORT_REQUEST)
-        logger.info("[KEY2] 中断语音")
+        logger.info("[KEY2] Ngắt giọng nói")
 
     def _on_key3(self):
         """KEY3: 切自动/手动."""
         self._safe_emit(Events.UI_AUTO_TOGGLE)
-        logger.info("[KEY3] 请求切换对话模式")
+        logger.info("[KEY3] Yêu cầu chuyển đổi chế độ đối thoại")
 
     def _on_key4(self):
         """KEY4: 退出程序."""
         self._safe_emit(Events.UI_QUIT_REQUEST)
-        logger.info("[KEY4] 退出程序")
+        logger.info("[KEY4] Thoát chương trình")
 
     def _safe_emit(self, event: str, data=None):
         """安全地发送事件.
@@ -119,7 +119,7 @@ class GpioViewManager:
                 return
             except Exception as e:
                 logger.error(
-                    f"GpioViewManager 经 TaskManager 调度事件 {event} 失败: {e}",
+                    f"GpioViewManager qua TaskManager điều phối sự kiện {event} thất bại: {e}",
                     exc_info=True,
                 )
 
@@ -136,13 +136,13 @@ class GpioViewManager:
                     return
                 if exc:
                     logger.error(
-                        f"GpioViewManager 发射事件 {event} 失败: {exc}",
+                        f"GpioViewManager phát sự kiện {event} thất bại: {exc}",
                         exc_info=exc,
                     )
 
             fut.add_done_callback(_done)
         except Exception as e:
-            logger.error(f"GpioViewManager 调度事件 {event} 失败: {e}", exc_info=True)
+            logger.error(f"GpioViewManager điều phối sự kiện {event} thất bại: {e}", exc_info=True)
             if asyncio.iscoroutine(coro):
                 coro.close()
 
@@ -157,24 +157,24 @@ class GpioViewManager:
         """设置状态."""
         self._status = status
         self._connected = connected
-        logger.info(f"[状态] {status}")
+        logger.info(f"[Trạng thái] {status}")
 
     def set_chat_text(self, text: str):
         self._chat_text = text
-        logger.info(f"[对话] {text}")
+        logger.info(f"[Đối thoại] {text}")
 
     def set_music_line(self, text: str):
         self._music_line = text
-        logger.info(f"[音乐] {text}")
+        logger.info(f"[Âm nhạc] {text}")
 
     def set_emotion(self, emotion: str):
-        logger.debug(f"[表情] {emotion}")
+        logger.debug(f"[Biểu cảm] {emotion}")
 
     def set_auto_mode(self, auto_mode: bool):
         # KEY1 分支会看这个
         self._auto_mode = auto_mode
-        mode_text = "自动" if auto_mode else "手动"
-        logger.info(f"[模式] {mode_text}")
+        mode_text = "Tự động" if auto_mode else "Thủ công"
+        logger.info(f"[Chế độ] {mode_text}")
 
     def set_button_text(self, text: str):
         logger.debug(f"GPIO set_button_text: {text}")

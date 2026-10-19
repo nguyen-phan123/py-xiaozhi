@@ -22,7 +22,7 @@ def launch_application(app_name: str) -> bool:
         bool: 启动是否成功
     """
     try:
-        logger.info(f"[LinuxLauncher] 启动应用程序: {app_name}")
+        logger.info(f"[LinuxLauncher] Khởi chạy ứng dụng: {app_name}")
 
         # 方法1: 直接使用应用程序名称
         try:
@@ -30,10 +30,10 @@ def launch_application(app_name: str) -> bool:
                 [app_name],
                 start_new_session=True,
             )
-            logger.info(f"[LinuxLauncher] 直接启动成功: {app_name}")
+            logger.info(f"[LinuxLauncher] Khởi chạy trực tiếp thành công: {app_name}")
             return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[LinuxLauncher] 直接启动失败: {app_name}")
+            logger.debug(f"[LinuxLauncher] Khởi chạy trực tiếp thất bại: {app_name}")
 
         # 方法2: 使用which查找应用程序路径
         try:
@@ -49,10 +49,10 @@ def launch_application(app_name: str) -> bool:
                     [app_path],
                     start_new_session=True,
                 )
-                logger.info(f"[LinuxLauncher] 通过which启动成功: {app_name}")
+                logger.info(f"[LinuxLauncher] Khởi chạy qua which thành công: {app_name}")
                 return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[LinuxLauncher] which启动失败: {app_name}")
+            logger.debug(f"[LinuxLauncher] Khởi chạy which thất bại: {app_name}")
 
         # 方法3: 使用xdg-open（适用于桌面环境）
         try:
@@ -60,10 +60,10 @@ def launch_application(app_name: str) -> bool:
                 ["xdg-open", app_name],
                 start_new_session=True,
             )
-            logger.info(f"[LinuxLauncher] 使用xdg-open启动成功: {app_name}")
+            logger.info(f"[LinuxLauncher] Khởi chạy bằng xdg-open thành công: {app_name}")
             return True
         except (OSError, subprocess.SubprocessError):
-            logger.debug(f"[LinuxLauncher] xdg-open启动失败: {app_name}")
+            logger.debug(f"[LinuxLauncher] Khởi chạy xdg-open thất bại: {app_name}")
 
         # 方法4: 尝试常见的应用程序路径
         common_paths = [
@@ -80,7 +80,7 @@ def launch_application(app_name: str) -> bool:
                     start_new_session=True,
                 )
                 logger.info(
-                    f"[LinuxLauncher] 通过常见路径启动成功: {app_name} ({path})"
+                    f"[LinuxLauncher] Khởi chạy qua đường dẫn thông dụng thành công: {app_name} ({path})"
                 )
                 return True
 
@@ -98,12 +98,12 @@ def launch_application(app_name: str) -> bool:
                     ["gtk-launch", f"{app_name}.desktop"],
                     start_new_session=True,
                 )
-                logger.info(f"[LinuxLauncher] 通过desktop文件启动成功: {app_name}")
+                logger.info(f"[LinuxLauncher] Khởi chạy qua tệp desktop thành công: {app_name}")
                 return True
 
-        logger.warning(f"[LinuxLauncher] 所有Linux启动方法都失败了: {app_name}")
+        logger.warning(f"[LinuxLauncher] Tất cả các phương pháp khởi chạy Linux đều thất bại: {app_name}")
         return False
 
     except Exception as e:
-        logger.error(f"[LinuxLauncher] Linux启动失败: {e}", exc_info=True)
+        logger.error(f"[LinuxLauncher] Khởi chạy Linux thất bại: {e}", exc_info=True)
         return False

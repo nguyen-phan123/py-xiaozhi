@@ -1,6 +1,6 @@
-"""启动健康门闩与音频降级策略.
+"""Cơ chế kiểm tra sức khỏe khởi động và chiến lược giáng cấp âm thanh (Health Check & Audio Degradation).
 
-与会话业务无关：只根据插件失败集与环境变量决定是否 exit / 降级继续。
+Độc lập với logic phiên làm việc: chỉ dựa vào tập hợp plugin thất bại và biến môi trường để quyết định exit hay tiếp tục ở chế độ giáng cấp (degraded).
 """
 
 from __future__ import annotations
@@ -8,13 +8,13 @@ from __future__ import annotations
 import os
 from typing import Optional, Protocol
 
-# 启动失败时直接退出，避免 zombie wait_shutdown
+# Thoát trực tiếp khi khởi động thất bại, tránh zombie wait_shutdown
 CRITICAL_PLUGINS = ("ui",)
-# audio 默认关键；XIAOZHI_DEGRADED_AUDIO=1 时失败仅降级不 exit
+# audio mặc định là then chốt; khi XIAOZHI_DEGRADED_AUDIO=1 thất bại chỉ giáng cấp chứ không exit
 AUDIO_CRITICAL = True
 
 DEGRADED_AUDIO_NOTICE = (
-    "降级：音频不可用（无麦/扬声器）。设置仍可用，修复设备后请重启。"
+    "Giáng cấp: Âm thanh không khả dụng (không có mic/loa). Trang cài đặt vẫn hoạt động, vui lòng khởi động lại sau khi sửa thiết bị."
 )
 
 
@@ -23,11 +23,11 @@ class _PluginHealth(Protocol):
 
 
 def audio_is_fatal() -> bool:
-    """audio 失败是否应导致进程退出.
+    """Kiểm tra lỗi audio có dẫn đến thoát tiến trình hay không.
 
-    - XIAOZHI_DISABLE_AUDIO=1：有意禁用，不视为失败
-    - XIAOZHI_DEGRADED_AUDIO=1：失败则降级继续（UI/设置可用）
-    - 默认：audio 失败即 exit 1
+    - XIAOZHI_DISABLE_AUDIO=1: Chủ động vô hiệu hóa, không coi là thất bại
+    - XIAOZHI_DEGRADED_AUDIO=1: Thất bại sẽ giáng cấp tiếp tục (UI/cài đặt khả dụng)
+    - Mặc định: Lỗi audio sẽ exit 1
     """
     if os.getenv("XIAOZHI_DISABLE_AUDIO") == "1":
         return False
@@ -37,10 +37,10 @@ def audio_is_fatal() -> bool:
 
 
 def check_critical_plugins(plugins: _PluginHealth) -> Optional[str]:
-    """检查关键插件是否可用.
+    """Kiểm tra các plugin then chốt (critical plugins) có khả dụng hay không.
 
     Returns:
-        错误描述；全部健康时返回 None
+        Mô tả lỗi; trả về None khi tất cả đều hoạt động bình thường
     """
     failed: list[str] = []
     for name in CRITICAL_PLUGINS:
@@ -56,11 +56,11 @@ def check_critical_plugins(plugins: _PluginHealth) -> Optional[str]:
     hints = []
     if "audio" in failed:
         hints.append(
-            "无音频调试可设 XIAOZHI_DISABLE_AUDIO=1；"
-            "或设 XIAOZHI_DEGRADED_AUDIO=1 以无麦模式继续（UI/设置可用）。"
+            "Để debug không có âm thanh, có thể đặt XIAOZHI_DISABLE_AUDIO=1; "
+            "hoặc đặt XIAOZHI_DEGRADED_AUDIO=1 để tiếp tục ở chế độ không mic (UI/cài đặt vẫn khả dụng)."
         )
     return (
-        f"关键插件启动失败: {', '.join(failed)}。"
-        "应用将退出以避免空转（zombie）。"
+        f"Plugin then chốt khởi động thất bại: {', '.join(failed)}. "
+        "Ứng dụng sẽ thoát để tránh chạy không tải (zombie)."
         + (" " + " ".join(hints) if hints else "")
     )

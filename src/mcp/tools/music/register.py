@@ -169,4 +169,4 @@ def register_music_tools(
 
     for tool in tools:
         add_tool(tool)
-    logger.info("已注册 %d 个音乐 MCP 工具（容器注入 MusicPlayer）", len(tools))
+    logger.info("Đã đăng ký %d MCP tool âm nhạc (container inject MusicPlayer)", len(tools))

@@ -171,14 +171,14 @@ def _capture_opencv(cfg: CaptureConfig) -> bytes | None:
     source: Any
     if cfg.device:
         source = cfg.device
-        logger.info(f"OpenCV 打开设备路径: {source}")
+        logger.info(f"OpenCV mở đường dẫn thiết bị: {source}")
     else:
         source = int(cfg.camera_index)
-        logger.info(f"OpenCV 打开 index: {source}")
+        logger.info(f"OpenCV mở index: {source}")
 
     cap = _open_capture(source)
     if not cap.isOpened():
-        logger.error(f"OpenCV 无法打开摄像头 source={source!r}")
+        logger.error(f"OpenCV không thể mở camera source={source!r}")
         return None
 
     try:
@@ -201,15 +201,15 @@ def _capture_opencv(cfg: CaptureConfig) -> bytes | None:
             time.sleep(0.03)
 
         if not ret or frame is None:
-            logger.error(f"OpenCV 读帧失败 source={source!r}")
+            logger.error(f"OpenCV đọc khung hình thất bại source={source!r}")
             return None
 
         jpeg = _encode_bgr_jpeg(frame, cfg.jpeg_max_side)
         if not jpeg:
-            logger.error("OpenCV JPEG 编码失败")
+            logger.error("OpenCV mã hóa JPEG thất bại")
             return None
         logger.info(
-            f"OpenCV 采集成功 source={source!r} size={len(jpeg)} "
+            f"OpenCV thu thập thành công source={source!r} size={len(jpeg)} "
             f"backend={cap.getBackendName() if hasattr(cap, 'getBackendName') else '?'}"
         )
         return jpeg
@@ -233,13 +233,13 @@ def _picamera2_available() -> bool:
 
 def _capture_picamera2(cfg: CaptureConfig) -> bytes | None:
     if not sys.platform.startswith("linux"):
-        logger.error("picamera2 仅支持 Linux/树莓派")
+        logger.error("picamera2 chỉ hỗ trợ Linux/Raspberry Pi")
         return None
     try:
         from picamera2 import Picamera2
     except ImportError:
         logger.error(
-            "未安装 picamera2，无法使用 CSI 摄像头。Pi 上: sudo apt install python3-picamera2"
+            "Chưa cài đặt picamera2, không thể dùng camera CSI. Trên Pi: sudo apt install python3-picamera2"
         )
         return None
 
@@ -265,12 +265,12 @@ def _capture_picamera2(cfg: CaptureConfig) -> bytes | None:
         bgr = _bgr_from_picamera_array(arr)
         jpeg = _encode_bgr_jpeg(bgr, cfg.jpeg_max_side)
         if not jpeg:
-            logger.error("picamera2 JPEG 编码失败")
+            logger.error("picamera2 mã hóa JPEG thất bại")
             return None
-        logger.info(f"picamera2 采集成功 size={len(jpeg)}")
+        logger.info(f"picamera2 thu thập thành công size={len(jpeg)}")
         return jpeg
     except Exception as e:
-        logger.error(f"picamera2 采集失败: {e}", exc_info=True)
+        logger.error(f"picamera2 thu thập thất bại: {e}", exc_info=True)
         return None
     finally:
         if picam2 is not None:
@@ -300,7 +300,7 @@ def capture_jpeg(cfg: CaptureConfig | None = None) -> bytes | None:
         if jpeg:
             return jpeg
         if _picamera2_available():
-            logger.info("OpenCV 采集失败，auto 回退 picamera2（CSI）")
+            logger.info("OpenCV thu thập thất bại, auto fallback picamera2 (CSI)")
             return _capture_picamera2(cfg)
         return None
 
@@ -310,7 +310,7 @@ def capture_jpeg(cfg: CaptureConfig | None = None) -> bytes | None:
             return fut.result(timeout=_CAPTURE_TIMEOUT_S)
         except FuturesTimeout:
             logger.error(
-                f"摄像头采集超时 ({_CAPTURE_TIMEOUT_S}s) "
+                f"Camera thu thập timeout ({_CAPTURE_TIMEOUT_S}s) "
                 f"backend={backend} device={cfg.device!r} index={cfg.camera_index}"
             )
             return None
@@ -375,7 +375,7 @@ def list_camera_devices(
                 except Exception:
                     pass
         except Exception as e:
-            logger.debug(f"探测 {path} 失败: {e}")
+            logger.debug(f"Dò tìm {path} thất bại: {e}")
 
     # 2) OpenCV 数字 index（全平台）
     consecutive_fail = 0
@@ -412,7 +412,7 @@ def list_camera_devices(
                     break
         except Exception as e:
             consecutive_fail += 1
-            logger.debug(f"探测 index={i} 失败: {e}")
+            logger.debug(f"Dò tìm index={i} thất bại: {e}")
             if consecutive_fail >= consecutive_fail_limit:
                 break
 
@@ -429,7 +429,7 @@ def list_camera_devices(
             )
             seen.add(key)
 
-    logger.info(f"摄像头枚举完成: {len(devices)} 个 {[d.name for d in devices]}")
+    logger.info(f"Liệt kê camera hoàn tất: {len(devices)} thiết bị {[d.name for d in devices]}")
     return devices
 
 

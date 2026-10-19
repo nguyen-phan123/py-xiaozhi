@@ -29,7 +29,7 @@ def initialize_config() -> "ConfigManager":
 
             apply_path_overrides_from_config(_current, migrate=True)
         except Exception as e:
-            logger.warning("应用 PATHS 目录覆盖失败: %s", e, exc_info=True)
+            logger.warning("Áp dụng ghi đè thư mục PATHS thất bại: %s", e, exc_info=True)
     return _current
 
 
@@ -219,15 +219,15 @@ class ConfigManager:
                     json.loads(install_config.read_text(encoding="utf-8"))
                     shutil.copy2(install_config, self.config_file)
                     logger.info(
-                        f"已从安装目录迁移配置: {install_config} -> {self.config_file}"
+                        f"Đã di chuyển cấu hình từ thư mục cài đặt: {install_config} -> {self.config_file}"
                     )
                 except Exception as e:
                     logger.warning(
-                        f"迁移配置文件失败: {e}，将使用默认配置", exc_info=True
+                        f"Di chuyển file cấu hình thất bại: {e}, sẽ sử dụng cấu hình mặc định", exc_info=True
                     )
 
-        logger.info(f"配置目录: {self.config_dir.absolute()}")
-        logger.info(f"配置文件: {self.config_file.absolute()}")
+        logger.info(f"Thư mục cấu hình: {self.config_dir.absolute()}")
+        logger.info(f"File cấu hình: {self.config_file.absolute()}")
 
     def _default_config_copy(self) -> Dict[str, Any]:
         """深拷贝默认配置，避免实例与类属性共享嵌套 dict/list."""
@@ -237,15 +237,15 @@ class ConfigManager:
         """加载配置文件；不存在则创建；损坏则备份后回退默认."""
         try:
             if self.config_file.exists():
-                logger.debug(f"找到配置文件: {self.config_file}")
+                logger.debug(f"Tìm thấy file cấu hình: {self.config_file}")
                 try:
                     raw = self.config_file.read_text(encoding="utf-8")
                     config = json.loads(raw)
                 except Exception as e:
                     backup = self._backup_corrupt_config(e)
                     logger.error(
-                        "配置文件损坏，已备份%s并回退默认: %s",
-                        f"至 {backup}" if backup else "",
+                        "File cấu hình bị hỏng, đã sao lưu %s và quay về mặc định: %s",
+                        f"sang {backup}" if backup else "",
                         e,
                         exc_info=True,
                     )
@@ -258,8 +258,8 @@ class ConfigManager:
                         TypeError(f"根节点须为 object，实际为 {type(config).__name__}")
                     )
                     logger.error(
-                        "配置文件根节点无效，已备份%s并回退默认",
-                        f"至 {backup}" if backup else "",
+                        "Nút gốc của file cấu hình không hợp lệ, đã sao lưu %s và quay về mặc định",
+                        f"sang {backup}" if backup else "",
                     )
                     defaults = self._default_config_copy()
                     self._save_config(defaults)
@@ -273,13 +273,13 @@ class ConfigManager:
                     file_ver = 0
                 return self._migrate_config(merged, from_version=file_ver)
 
-            logger.info("配置文件不存在，创建默认配置")
+            logger.info("File cấu hình không tồn tại, tạo cấu hình mặc định")
             defaults = self._default_config_copy()
             self._save_config(defaults)
             return defaults
 
         except Exception as e:
-            logger.error(f"配置加载错误: {e}", exc_info=True)
+            logger.error(f"Lỗi tải cấu hình: {e}", exc_info=True)
             return self._default_config_copy()
 
     def _migrate_config(
@@ -331,11 +331,11 @@ class ConfigManager:
             config["CONFIG_VERSION"] = self.CONFIG_VERSION
             if self._save_config(config):
                 logger.info(
-                    "配置已迁移: v%s -> v%s", original, self.CONFIG_VERSION
+                    "Cấu hình đã được nâng cấp: v%s -> v%s", original, self.CONFIG_VERSION
                 )
             else:
                 logger.warning(
-                    "配置迁移后写回失败（内存已是 v%s）", self.CONFIG_VERSION
+                    "Ghi lại sau khi nâng cấp cấu hình thất bại (bộ nhớ đã là v%s)", self.CONFIG_VERSION
                 )
         else:
             config["CONFIG_VERSION"] = self.CONFIG_VERSION
@@ -354,10 +354,10 @@ class ConfigManager:
                 n += 1
                 backup = self.config_file.with_name(f"config.json.corrupt-{ts}-{n}")
             shutil.copy2(self.config_file, backup)
-            logger.warning("已备份损坏配置: %s (%s)", backup, error)
+            logger.warning("Đã sao lưu cấu hình hỏng: %s (%s)", backup, error)
             return str(backup)
         except Exception as e:
-            logger.error("备份损坏配置失败: %s", e, exc_info=True)
+            logger.error("Sao lưu cấu hình hỏng thất bại: %s", e, exc_info=True)
             return None
 
     def _save_config(self, config: dict) -> bool:
@@ -370,11 +370,11 @@ class ConfigManager:
                 json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8"
             )
             os.replace(tmp_file, self.config_file)
-            logger.debug(f"配置已保存到: {self.config_file}")
+            logger.debug(f"Cấu hình đã được lưu vào: {self.config_file}")
             return True
 
         except Exception as e:
-            logger.error(f"配置保存错误: {e}", exc_info=True)
+            logger.error(f"Lỗi lưu cấu hình: {e}", exc_info=True)
             return False
 
     @staticmethod
@@ -437,7 +437,7 @@ class ConfigManager:
                 return True
             return self._save_config(self._config)
         except Exception as e:
-            logger.error(f"配置更新错误 {path}: {e}", exc_info=True)
+            logger.error(f"Lỗi cập nhật cấu hình {path}: {e}", exc_info=True)
             return False
 
     def update_configs(self, updates: Dict[str, Any]) -> bool:
@@ -455,7 +455,7 @@ class ConfigManager:
                     return False
             return self._save_config(self._config)
         except Exception as e:
-            logger.error(f"批量配置更新错误: {e}", exc_info=True)
+            logger.error(f"Lỗi cập nhật cấu hình hàng loạt: {e}", exc_info=True)
             return False
 
     def save_config(self) -> bool:
@@ -477,12 +477,12 @@ class ConfigManager:
                     apply_path_overrides_from_config(self, migrate=False)
                 except Exception as e:
                     logger.warning(
-                        "reload 后应用 PATHS 失败: %s", e, exc_info=True
+                        "Áp dụng PATHS sau khi reload thất bại: %s", e, exc_info=True
                     )
-            logger.info("配置文件已重新加载")
+            logger.info("File cấu hình đã được tải lại")
             return True
         except Exception as e:
-            logger.error(f"配置重新加载失败: {e}", exc_info=True)
+            logger.error(f"Tải lại cấu hình thất bại: {e}", exc_info=True)
             return False
 
     def generate_uuid(self) -> str:
@@ -495,6 +495,6 @@ class ConfigManager:
             client_id = self.generate_uuid()
             success = self.update_config("SYSTEM_OPTIONS.CLIENT_ID", client_id)
             if success:
-                logger.info(f"已生成新的客户端ID: {client_id}")
+                logger.info(f"Đã tạo Client ID mới: {client_id}")
             else:
-                logger.error("保存新的客户端ID失败")
+                logger.error("Lưu Client ID mới thất bại")

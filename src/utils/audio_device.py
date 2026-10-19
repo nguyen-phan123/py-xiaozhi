@@ -55,30 +55,30 @@ class AudioDeviceManager:
         output_info = None
 
         if input_device_name:
-            logger.info(f"尝试查找输入设备: {input_device_name}")
+            logger.info(f"Thử tìm kiếm thiết bị đầu vào: {input_device_name}")
             input_info = find_device_by_name("input", input_device_name)
             if input_info:
-                logger.info(f"✓ 找到输入设备: {input_info['name']} (ID: {input_info['index']})")
+                logger.info(f"✓ Tìm thấy thiết bị đầu vào: {input_info['name']} (ID: {input_info['index']})")
             else:
-                logger.warning(f"✗ 未找到设备 '{input_device_name}'，将重新选择")
+                logger.warning(f"✗ Không tìm thấy thiết bị '{input_device_name}', sẽ chọn lại")
 
         if output_device_name:
-            logger.info(f"尝试查找输出设备: {output_device_name}")
+            logger.info(f"Thử tìm kiếm thiết bị đầu ra: {output_device_name}")
             output_info = find_device_by_name("output", output_device_name)
             if output_info:
-                logger.info(f"✓ 找到输出设备: {output_info['name']} (ID: {output_info['index']})")
+                logger.info(f"✓ Tìm thấy thiết bị đầu ra: {output_info['name']} (ID: {output_info['index']})")
             else:
-                logger.warning(f"✗ 未找到设备 '{output_device_name}'，将重新选择")
+                logger.warning(f"✗ Không tìm thấy thiết bị '{output_device_name}', sẽ chọn lại")
 
         # 2. 如果按名称查找失败，自动选择新设备
         if not input_info:
-            logger.info("自动选择输入设备...")
+            logger.info("Tự động chọn thiết bị đầu vào...")
             input_info = select_audio_device("input")
             if not input_info:
                 raise RuntimeError("无法找到可用的输入设备")
 
         if not output_info:
-            logger.info("自动选择输出设备...")
+            logger.info("Tự động chọn thiết bị đầu ra...")
             output_info = select_audio_device("output")
             if not output_info:
                 raise RuntimeError("无法找到可用的输出设备")
@@ -91,11 +91,11 @@ class AudioDeviceManager:
         device_output_sample_rate = output_info["sample_rate"]
 
         logger.info(
-            f"使用输入设备: {input_info['name']} | "
+            f"Sử dụng thiết bị đầu vào: {input_info['name']} | "
             f"{device_input_sample_rate}Hz {input_channels}ch"
         )
         logger.info(
-            f"使用输出设备: {output_info['name']} | "
+            f"Sử dụng thiết bị đầu ra: {output_info['name']} | "
             f"{device_output_sample_rate}Hz {output_channels}ch"
         )
 
@@ -110,7 +110,7 @@ class AudioDeviceManager:
             self.config.update_config("AUDIO_DEVICES.output_device_name", output_info["name"])
             self.config.update_config("AUDIO_DEVICES.output_sample_rate", device_output_sample_rate)
             self.config.update_config("AUDIO_DEVICES.output_channels", output_channels)
-            logger.info("设备配置已保存")
+            logger.info("Cấu hình thiết bị đã được lưu")
 
         return DeviceConfig(
             input_device_id=input_info["index"],

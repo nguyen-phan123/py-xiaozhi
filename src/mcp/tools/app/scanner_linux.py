@@ -41,7 +41,7 @@ def scan_installed_applications() -> List[Dict[str, str]]:
                         apps.append(app_info)
                 except Exception as e:
                     logger.debug(
-                        f"[LinuxScanner] 解析desktop文件失败 {desktop_file}: {e}"
+                        f"[LinuxScanner] Phân tích tệp desktop thất bại {desktop_file}: {e}"
                     )
 
     # 添加常见的Linux系统应用
@@ -85,7 +85,7 @@ def scan_installed_applications() -> List[Dict[str, str]]:
     ]
     apps.extend(system_apps)
 
-    logger.info(f"[LinuxScanner] 扫描完成，找到 {len(apps)} 个应用程序")
+    logger.info(f"[LinuxScanner] Quét hoàn tất, tìm thấy {len(apps)} ứng dụng")
     return apps
 
 
@@ -133,11 +133,11 @@ def scan_running_applications() -> List[Dict[str, str]]:
                             }
                         )
 
-        logger.info(f"[LinuxScanner] 找到 {len(apps)} 个正在运行的应用程序")
+        logger.info(f"[LinuxScanner] Tìm thấy {len(apps)} ứng dụng đang chạy")
         return apps
 
     except Exception as e:
-        logger.error(f"[LinuxScanner] 扫描运行应用失败: {e}", exc_info=True)
+        logger.error(f"[LinuxScanner] Quét ứng dụng đang chạy thất bại: {e}", exc_info=True)
         return []
 
 

@@ -42,9 +42,9 @@ class WindowsVolumeBackend:
                 IAudioEndpointVolume._iid_, CLSCTX_ALL, None
             )
             self.volume_control = cast(interface, POINTER(IAudioEndpointVolume))
-            logger.debug("Windows音量控制初始化成功")
+            logger.debug("Khởi tạo điều khiển âm lượng Windows thành công")
         except Exception as e:
-            logger.error(f"Windows音量控制初始化失败: {e}", exc_info=True)
+            logger.error(f"Khởi tạo điều khiển âm lượng Windows thất bại: {e}", exc_info=True)
             raise
 
     def get_volume(self) -> int:
@@ -52,11 +52,11 @@ class WindowsVolumeBackend:
             volume_scalar = self.volume_control.GetMasterVolumeLevelScalar()
             return int(volume_scalar * 100)
         except Exception as e:
-            logger.warning(f"获取Windows音量失败: {e}", exc_info=True)
+            logger.warning(f"Lấy âm lượng Windows thất bại: {e}", exc_info=True)
             return 70
 
     def set_volume(self, volume: int) -> None:
         try:
             self.volume_control.SetMasterVolumeLevelScalar(volume / 100.0, None)
         except Exception as e:
-            logger.warning(f"设置Windows音量失败: {e}", exc_info=True)
+            logger.warning(f"Đặt âm lượng Windows thất bại: {e}", exc_info=True)

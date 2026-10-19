@@ -126,4 +126,4 @@ def register_app_tools(add_tool: Callable[[McpTool], None]) -> None:
 
     for tool in tools:
         add_tool(tool)
-    logger.info("已注册 %d 个应用 MCP 工具（register_app_tools）", len(tools))
+    logger.info("Đã đăng ký %d MCP tool ứng dụng (register_app_tools)", len(tools))

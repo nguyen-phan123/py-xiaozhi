@@ -5,7 +5,7 @@ import os
 import signal
 import sys
 
-# Windows: 强制 C/C++ 运行时使用 UTF-8，解决 sherpa-onnx 读取声调拼音文件乱码
+# Windows: Ép C/C++ runtime dùng UTF-8, khắc phục lỗi font khi sherpa-onnx đọc file pinyin thanh điệu
 if sys.platform == "win32":
     os.environ["PYTHONIOENCODING"] = "utf-8"
     try:
@@ -14,44 +14,44 @@ if sys.platform == "win32":
         pass
 
 os.environ["QSG_RHI_BACKEND"] = "opengl"
-# 强制 qasync 使用 PySide6
+# Bắt buộc qasync sử dụng PySide6
 os.environ["QT_API"] = "pyside6"
-# 使用 Basic 样式以支持自定义控件
+# Dùng style Basic để hỗ trợ custom controls
 os.environ["QT_QUICK_CONTROLS_STYLE"] = "Basic"
 
 
 def parse_args():
-    """解析命令行参数."""
+    """Phân tích các tham số dòng lệnh."""
     from src.constants.system import SystemConstants
 
     parser = argparse.ArgumentParser(description=SystemConstants.APP_DISPLAY_NAME)
-    # 运行模式选择
-    # - gui: 图形界面模式，使用 PySide6 + QML
-    # - cli: 命令行模式，使用终端交互（轻量，适合无屏/SSH）
-    # - tui: 全屏 TUI（Textual），可编辑配置；需 uv sync --extra tui
-    # - gpio: GPIO 按键模式，仅支持 Linux（树莓派），通过物理按键控制
+    # Lựa chọn chế độ chạy
+    # - gui: Chế độ giao diện đồ họa, sử dụng PySide6 + QML
+    # - cli: Chế độ dòng lệnh, tương tác qua terminal (nhẹ, phù hợp cho máy không màn hình/SSH)
+    # - tui: TUI toàn màn hình (Textual), có thể chỉnh sửa cấu hình; cần uv sync --extra tui
+    # - gpio: Chế độ nút bấm GPIO, chỉ hỗ trợ Linux (Raspberry Pi), điều khiển qua nút bấm vật lý
     parser.add_argument(
         "--mode",
         choices=["gui", "cli", "tui", "gpio"],
         default="gui",
-        help="运行模式（默认 gui）：gui / cli / tui(全屏终端) / gpio(仅Linux)",
+        help="Chế độ chạy (mặc định gui): gui / cli / tui(terminal toàn màn hình) / gpio(chỉ Linux)",
     )
     parser.add_argument(
         "--protocol",
         choices=["mqtt", "websocket"],
         default="websocket",
         metavar="PROTOCOL",
-        help="通信协议：mqtt 或 websocket（默认 websocket；须写 --protocol mqtt）",
+        help="Giao thức truyền thông: mqtt hoặc websocket (mặc định websocket; cần viết --protocol mqtt)",
     )
     parser.add_argument(
         "--skip-activation",
         action="store_true",
-        help="跳过激活流程，直接启动应用（仅用于调试）",
+        help="Bỏ qua quy trình kích hoạt, khởi chạy trực tiếp ứng dụng (chỉ dùng cho debug)",
     )
     return parser.parse_args()
 
 
-# 先解析参数，再初始化配置与日志（禁止 ConfigManager 懒单例）
+# Phân tích tham số trước, sau đó mới khởi tạo cấu hình và log (ngăn ConfigManager lazy singleton)
 _args = parse_args()
 
 from src.utils.config_manager import initialize_config  # noqa: E402
@@ -60,7 +60,7 @@ initialize_config()
 
 from src.logging import load_logging_config, setup_logging  # noqa: E402
 
-# CLI/TUI 模式禁用控制台日志输出（由界面接管）
+# Chế độ CLI/TUI vô hiệu hóa xuất log ra console (giao diện sẽ tiếp quản)
 setup_logging(
     enable_console=(_args.mode not in ("cli", "tui")),
     config=load_logging_config(),
@@ -74,67 +74,69 @@ logger = get_logger()
 
 
 async def handle_activation(mode: str) -> bool:
-    """处理设备激活流程.
+    """Xử lý quy trình kích hoạt thiết bị.
 
     Args:
-        mode: 运行模式，"gui"、"cli"、"tui" 或 "gpio"
+        mode: Chế độ chạy, "gui", "cli", "tui" hoặc "gpio"
 
     Returns:
-        bool: 激活是否成功
+        bool: Kích hoạt có thành công hay không
     """
     try:
         from src.activation import ActivationService, create_activation_ui
 
-        logger.info("开始设备激活流程检查...")
+        logger.info("Bắt đầu kiểm tra quy trình kích hoạt thiết bị...")
         activation_service = await ActivationService.create()
         init_result = await activation_service.initialize()
 
         if not init_result.get("success", False):
-            logger.error(f"初始化失败: {init_result.get('error', '未知错误')}")
+            logger.error(
+                f"Khởi tạo thất bại: {init_result.get('error', 'Lỗi không xác định')}"
+            )
             return False
 
         if not init_result.get("need_activation_ui", False):
-            logger.info("设备已激活，无需激活流程")
+            logger.info("Thiết bị đã được kích hoạt, bỏ qua quy trình kích hoạt")
             return True
 
         ui = create_activation_ui(mode, activation_service, init_result)
         return await ui.run()
 
     except Exception as e:
-        logger.error(f"激活流程异常: {e}", exc_info=True)
+        logger.error(f"Quy trình kích hoạt xảy ra ngoại lệ: {e}", exc_info=True)
         return False
 
 
 async def start_app(mode: str, protocol: str, skip_activation: bool) -> int:
-    """启动应用的统一入口."""
-    global _container  # 用于 SIGINT 处理
-    logger.info(f"启动{SystemConstants.APP_DISPLAY_NAME}")
+    """Điểm vào thống nhất để khởi chạy ứng dụng."""
+    global _container  # Dùng cho xử lý SIGINT
+    logger.info(f"Starting {SystemConstants.APP_DISPLAY_NAME}")
 
-    # 处理激活流程
+    # Xử lý quy trình kích hoạt
     if not skip_activation:
         activation_success = await handle_activation(mode)
         if not activation_success:
-            logger.error("设备激活失败，程序退出")
+            logger.error("Kích hoạt thiết bị thất bại, chương trình đang thoát")
             return 1
     else:
-        logger.warning("跳过激活流程（调试模式）")
+        logger.warning("Bỏ qua quy trình kích hoạt (chế độ debug)")
 
-    # 创建并启动应用程序
+    # Tạo và khởi chạy ứng dụng
     _container = ServiceContainer()
     return await _container.run(mode=mode, protocol=protocol)
 
 
-# 全局容器引用，用于 SIGINT 处理
+# Tham chiếu container toàn cục, dùng cho xử lý SIGINT
 _container = None
 
 
 if __name__ == "__main__":
     exit_code = 1
     try:
-        # 使用已解析的参数
+        # Sử dụng các tham số đã phân tích
         args = _args
 
-        # 检测Wayland环境并设置Qt平台插件配置
+        # Phát hiện môi trường Wayland và thiết lập cấu hình Qt platform plugin
         import os
 
         is_wayland = (
@@ -145,11 +147,11 @@ if __name__ == "__main__":
         if args.mode == "gui" and is_wayland:
             if "QT_QPA_PLATFORM" not in os.environ:
                 os.environ["QT_QPA_PLATFORM"] = "wayland;xcb"
-                logger.info("Wayland环境：设置QT_QPA_PLATFORM=wayland;xcb")
+                logger.info("Môi trường Wayland: Thiết lập QT_QPA_PLATFORM=wayland;xcb")
             os.environ.setdefault("QT_WAYLAND_DISABLE_WINDOWDECORATION", "1")
-            logger.info("Wayland环境检测完成，已应用兼容性配置")
+            logger.info("Đã phát hiện môi trường Wayland, áp dụng cấu hình tương thích")
 
-        # 信号处理
+        # Xử lý tín hiệu (signals)
         try:
             if hasattr(signal, "SIGTRAP"):
                 signal.signal(signal.SIGTRAP, signal.SIG_IGN)
@@ -157,23 +159,23 @@ if __name__ == "__main__":
             pass
 
         if args.mode == "gui":
-            # GUI 模式：使用 PySide6 + qasync
+            # Chế độ GUI: Sử dụng PySide6 + qasync
             try:
                 import qasync
                 from PySide6.QtWidgets import QApplication
             except ImportError as e:
                 logger.error(
-                    "GUI 模式需要 PySide6 + qasync，当前环境未安装。\n"
-                    "请用项目 venv 安装 GUI 依赖后重试：\n"
+                    "GUI Mode yêu cầu PySide6 + qasync, môi trường hiện tại chưa cài đặt.\n"
+                    "please install dependency GUI trong venv của dự án rồi thử lại:\n"
                     "  uv sync --extra gui\n"
-                    "  # 或: pip install '.[gui]'\n"
-                    "然后：\n"
+                    "  # hoặc: pip install '.[gui]'\n"
+                    "Sau đó:\n"
                     "  uv run python main.py\n"
-                    "  # 或: .venv/bin/python main.py\n"
-                    "不要 GUI 时可用：\n"
+                    "  # hoặc: .venv/bin/python main.py\n"
+                    "Nếu không dùng GUI:\n"
                     "  python main.py --mode cli\n"
-                    "  python main.py --mode tui   # 需 uv sync --extra tui\n"
-                    f"(原始错误: {e})"
+                    "  python main.py --mode tui   # cần uv sync --extra tui\n"
+                    f"(Lỗi gốc: {e})"
                 )
                 sys.exit(1)
 
@@ -182,23 +184,23 @@ if __name__ == "__main__":
 
             loop = qasync.QEventLoop(qt_app)
             asyncio.set_event_loop(loop)
-            logger.info("已创建 PySide6 + qasync 事件循环")
+            logger.info("Installed Event loop PySide6 + qasync")
 
-            # 设置 SIGINT 信号处理 - 通过 TaskManager 请求关闭
+            # Thiết lập xử lý tín hiệu SIGINT - yêu cầu đóng thông qua TaskManager
             shutdown_state = {"requested": False}
 
             def handle_sigint(*_):
                 if shutdown_state["requested"]:
                     return
                 shutdown_state["requested"] = True
-                logger.info("收到 SIGINT 信号，正在退出...")
+                logger.info("Nhận được tín hiệu SIGINT, đang thoát...")
 
-                # 通过 TaskManager 请求优雅关闭
+                # Yêu cầu shutdown mềm mại thông qua TaskManager
                 try:
                     if _container and _container.tasks:
                         _container.tasks.request_shutdown()
                     else:
-                        # 容器未就绪，直接退出 Qt
+                        # Container chưa sẵn sàng, thoát trực tiếp Qt
                         if loop.is_running():
                             loop.call_soon_threadsafe(qt_app.quit)
                 except Exception:
@@ -212,37 +214,39 @@ if __name__ == "__main__":
                         start_app(args.mode, args.protocol, args.skip_activation)
                     )
             except RuntimeError as e:
-                # 捕获 qasync 的 "Event loop stopped before Future completed" 错误
+                # Bắt lỗi "Event loop stopped before Future completed" của qasync
                 if "Event loop stopped before Future completed" in str(e):
-                    logger.debug("事件循环已正常终止")
+                    logger.debug("Event loop đã kết thúc bình thường")
                     exit_code = 0
                 else:
                     raise
         else:
-            # CLI / TUI / GPIO：标准 asyncio
+            # CLI / TUI / GPIO: asyncio chuẩn
             if args.mode == "tui":
                 try:
                     import textual  # noqa: F401
                 except ImportError as e:
                     logger.error(
-                        "TUI 模式需要 textual。请运行:\n"
+                        "Chế độ TUI yêu cầu textual. Vui lòng chạy:\n"
                         "  uv sync --extra tui\n"
                         "  pip install '.[tui]'\n"
-                        "无屏/SSH 请继续用: python main.py --mode cli\n"
-                        f"(原始错误: {e})"
+                        "Môi trường không màn hình/SSH vui lòng dùng: python main.py --mode cli\n"
+                        f"(Lỗi gốc: {e})"
                     )
                     sys.exit(1)
 
-            # CLI / GPIO 模式：标准 asyncio；SIGINT 请求 TaskManager 关闭
+            # Chế độ CLI / GPIO: asyncio chuẩn; SIGINT yêu cầu TaskManager đóng
             shutdown_state = {"requested": False}
 
             def handle_sigint_cli(*_):
                 if shutdown_state["requested"]:
-                    # 二次 Ctrl+C：硬退
-                    logger.warning("再次收到 SIGINT，强制退出")
+                    # Ctrl+C lần hai: Buộc dừng thoát ngay
+                    logger.warning(
+                        "Tiếp tục nhận tín hiệu SIGINT, buộc dừng thoát ngay"
+                    )
                     os._exit(130)
                 shutdown_state["requested"] = True
-                logger.info("收到 SIGINT 信号，正在退出...")
+                logger.info("Nhận được tín hiệu SIGINT, đang thoát...")
                 try:
                     if _container and _container.tasks:
                         _container.tasks.request_shutdown()
@@ -255,10 +259,10 @@ if __name__ == "__main__":
             )
 
     except KeyboardInterrupt:
-        logger.info("程序被用户中断")
+        logger.info("Chương trình bị ngắt bởi người dùng")
         exit_code = 0
     except Exception as e:
-        logger.error(f"程序异常退出: {e}", exc_info=True)
+        logger.error(f"Chương trình thoát bất thường: {e}", exc_info=True)
         exit_code = 1
     finally:
         sys.exit(exit_code)

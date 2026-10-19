@@ -110,7 +110,7 @@ class PluginLoader:
         self.loaded.clear()
         root = self.plugins_dir
         if not root.is_dir():
-            logger.info("[MCP插件] 目录不存在，跳过: %s", root)
+            logger.info("[MCP Plugin] Thư mục không tồn tại, bỏ qua: %s", root)
             return self.loaded
         for child in sorted(root.iterdir(), key=lambda p: p.name.lower()):
             if child.name.startswith(".") or child.name.startswith("_"):
@@ -122,7 +122,7 @@ class PluginLoader:
         ok = sum(1 for x in self.loaded if not x.error)
         fail = sum(1 for x in self.loaded if x.error)
         logger.info(
-            "[MCP插件] 加载完成: 成功 %d, 跳过/失败 %d, 目录 %s",
+            "[MCP Plugin] Tải hoàn tất: thành công %d, bỏ qua/thất bại %d, thư mục %s",
             ok, fail, root,
         )
         return self.loaded
@@ -149,7 +149,7 @@ class PluginLoader:
         try:
             self._validate_and_import_package(path, manifest, plugin_id)
         except Exception as e:
-            logger.error("[MCP插件] 加载失败 %s: %s", plugin_id, e, exc_info=True)
+            logger.error("[MCP Plugin] Tải thất bại %s: %s", plugin_id, e, exc_info=True)
             self._record(plugin_id, path, error=str(e))
 
     def _load_package_dir_without_manifest(self, path: Path) -> None:
@@ -163,7 +163,7 @@ class PluginLoader:
         try:
             self._validate_and_import_package(path, manifest, plugin_id)
         except Exception as e:
-            logger.error("[MCP插件] 加载失败 %s: %s", plugin_id, e, exc_info=True)
+            logger.error("[MCP Plugin] Tải thất bại %s: %s", plugin_id, e, exc_info=True)
             self._record(plugin_id, path, error=str(e))
 
     def _check_manifest_compat(self, manifest: dict[str, Any]) -> None:
@@ -212,7 +212,7 @@ class PluginLoader:
             plugin_id, bool(manifest.get("enabled_by_default", True))
         ):
             self._record(plugin_id, path, error="disabled")
-            logger.info("[MCP插件] 已禁用，跳过: %s", plugin_id)
+            logger.info("[MCP Plugin] Đã bị vô hiệu hóa, bỏ qua: %s", plugin_id)
             return
 
         runtime = str(manifest.get("runtime") or "python-inprocess")
@@ -275,7 +275,7 @@ class PluginLoader:
                     msg = f"工具名未使用前缀 {prefix}: {bad}"
                     if self.enforce_prefix:
                         raise RuntimeError(msg)
-                    logger.warning("[MCP插件:%s] %s", plugin_id, msg)
+                    logger.warning("[MCP Plugin:%s] %s", plugin_id, msg)
             if self.tool_owner is not None:
                 for n in names:
                     self.tool_owner[n] = plugin_id
@@ -283,7 +283,7 @@ class PluginLoader:
                 plugin_id, path, tool_names=names, runtime="python-inprocess"
             )
             logger.info(
-                "[MCP插件] 已加载 %s (%d 工具, inprocess) from %s",
+                "[MCP Plugin] Đã tải %s (%d tool, inprocess) from %s",
                 plugin_id, len(names), path,
             )
         except Exception:
@@ -324,7 +324,7 @@ class PluginLoader:
                 plugin_id, path, tool_names=names, runtime="python-subprocess"
             )
             logger.info(
-                "[MCP插件] 已加载 %s (%d 工具, subprocess) from %s",
+                "[MCP Plugin] Đã tải %s (%d tool, subprocess) from %s",
                 plugin_id, len(names), path,
             )
         except Exception:
@@ -357,11 +357,11 @@ class PluginLoader:
                 plugin_id, path, tool_names=names, runtime="python-inprocess"
             )
             logger.info(
-                "[MCP插件] 已加载单文件 %s (%d 工具)", plugin_id, len(names)
+                "[MCP Plugin] Đã tải tệp đơn %s (%d tool)", plugin_id, len(names)
             )
         except Exception as e:
             logger.error(
-                "[MCP插件] 单文件加载失败 %s: %s", plugin_id, e, exc_info=True
+                "[MCP Plugin] Tải tệp đơn thất bại %s: %s", plugin_id, e, exc_info=True
             )
             self._record(plugin_id, path, error=str(e))
 
@@ -418,7 +418,7 @@ def load_mcp_plugins_from_config(
             from src.utils.config_manager import get_config
             config = get_config()
         except Exception:
-            logger.debug("[MCP插件] 无配置，使用默认目录加载")
+            logger.debug("[MCP Plugin] Không có cấu hình, sử dụng thư mục mặc định để tải")
             config = None
 
     def _get(path: str, default=None):
@@ -427,7 +427,7 @@ def load_mcp_plugins_from_config(
         return config.get_config(path, default)
 
     if not _get("MCP_PLUGINS.ENABLED", True):
-        logger.info("[MCP插件] MCP_PLUGINS.ENABLED=false，跳过外挂")
+        logger.info("[MCP Plugin] MCP_PLUGINS.ENABLED=false, bỏ qua plugin ngoài")
         return []
 
     dir_cfg = _get("MCP_PLUGINS.DIR", None)

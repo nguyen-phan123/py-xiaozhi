@@ -1,6 +1,6 @@
-"""pynput 快捷键后端.
+"""Backend phím tắt pynput.
 
-用于 Linux 和 Windows 系统。
+Dùng cho các hệ thống Linux và Windows.
 """
 
 import asyncio
@@ -23,9 +23,9 @@ except ImportError as e:
 
 
 class PynputShortcutBackend(ShortcutBackend):
-    """pynput 快捷键后端.
+    """Backend phím tắt pynput.
 
-    适用于 Linux 和 Windows 系统。
+    Thích hợp cho các hệ thống Linux và Windows.
     """
 
     def __init__(self, loop: Optional[asyncio.AbstractEventLoop] = None):
@@ -34,9 +34,9 @@ class PynputShortcutBackend(ShortcutBackend):
         self._pressed_keys: Set[str] = set()
         self._last_activity_time = 0.0
         self._health_check_task = None
-        self._check_interval = 10.0  # 健康检查间隔（秒）
+        self._check_interval = 10.0  # Khoảng thời gian kiểm tra sức khỏe (giây)
 
-        # 控制字符映射
+        # Bảng ánh xạ ký tự điều khiển
         self._key_mapping = {
             "\x17": "w", "\x01": "a", "\x13": "s", "\x04": "d",
             "\x05": "e", "\x12": "r", "\x14": "t", "\x06": "f",
@@ -47,7 +47,7 @@ class PynputShortcutBackend(ShortcutBackend):
         }
 
     async def start(self) -> bool:
-        """启动快捷键监听."""
+        """Bắt đầu lắng nghe phím tắt."""
         if self._running:
             return True
 
@@ -60,50 +60,50 @@ class PynputShortcutBackend(ShortcutBackend):
             self._running = True
             self._last_activity_time = time.time()
 
-            # 启动健康检查
+            # Khởi động kiểm tra sức khỏe
             self._start_health_check()
 
-            logger.info("pynput 全局快捷键监听已启动")
+            logger.info("Đã khởi động lắng nghe phím tắt toàn cục pynput")
             return True
         except Exception as e:
-            logger.error(f"启动 pynput 快捷键监听失败: {e}", exc_info=True)
+            logger.error(f"Khởi động lắng nghe phím tắt pynput thất bại: {e}", exc_info=True)
             return False
 
     async def stop(self) -> None:
-        """停止快捷键监听."""
+        """Dừng lắng nghe phím tắt."""
         self._running = False
 
-        # 停止健康检查
+        # Dừng kiểm tra sức khỏe
         if self._health_check_task:
             self._health_check_task.cancel()
-            # concurrent.futures.Future 不能直接 await，需要特殊处理
+            # concurrent.futures.Future không thể await trực tiếp, cần xử lý đặc biệt
             try:
-                # 等待 Future 完成（忽略取消异常）
+                # Chờ Future hoàn thành (bỏ qua ngoại lệ hủy)
                 self._health_check_task.result(timeout=1.0)
             except Exception as e:
-                logger.debug(f"Pynput 健康检查超时: {e}")
+                logger.debug(f"Health check Pynput timeout: {e}")
             self._health_check_task = None
 
-        # 停止监听器
+        # Dừng listener
         if self._listener:
             try:
                 self._listener.stop()
             except Exception as e:
-                logger.warning(f"停止监听器时出错: {e}", exc_info=True)
+                logger.warning(f"Lỗi khi dừng listener: {e}", exc_info=True)
             self._listener = None
 
         self._pressed_keys.clear()
-        logger.info("pynput 全局快捷键监听已停止")
+        logger.info("Đã dừng lắng nghe phím tắt toàn cục pynput")
 
     def register(self, name: str, config: ShortcutConfig, callback: Callable) -> bool:
-        """注册快捷键."""
+        """Đăng ký phím tắt."""
         self._shortcuts[name] = config
         self._callbacks[name] = callback
-        logger.info(f"已注册快捷键: {name} -> {config.modifier}+{config.key}")
+        logger.info(f"Đã đăng ký phím tắt: {name} -> {config.modifier}+{config.key}")
         return True
 
     def unregister(self, name: str) -> bool:
-        """注销快捷键."""
+        """Hủy đăng ký phím tắt."""
         if name not in self._shortcuts:
             return False
 
@@ -111,11 +111,11 @@ class PynputShortcutBackend(ShortcutBackend):
         if name in self._callbacks:
             del self._callbacks[name]
 
-        logger.info(f"已注销快捷键: {name}")
+        logger.info(f"Đã hủy đăng ký phím tắt: {name}")
         return True
 
     def _on_key_press(self, key) -> None:
-        """按键按下回调."""
+        """Callback khi nhấn phím."""
         if not self._running:
             return
 
@@ -128,7 +128,7 @@ class PynputShortcutBackend(ShortcutBackend):
         self._check_shortcuts()
 
     def _on_key_release(self, key) -> None:
-        """按键释放回调."""
+        """Callback khi nhả phím."""
         if not self._running:
             return
 
@@ -140,11 +140,11 @@ class PynputShortcutBackend(ShortcutBackend):
         self._pressed_keys.discard(key_name)
 
     def _get_key_name(self, key) -> Optional[str]:
-        """获取按键名称."""
+        """Lấy tên phím bấm."""
         try:
             if hasattr(key, "name"):
                 name = key.name
-                # 规范化修饰键名称
+                # Chuẩn hóa tên phím bổ trợ (modifier)
                 if name in ("ctrl_l", "ctrl_r"):
                     return "ctrl"
                 if name in ("alt_l", "alt_r"):
@@ -166,15 +166,15 @@ class PynputShortcutBackend(ShortcutBackend):
                     return self._key_mapping[char]
                 return char.lower()
         except Exception as e:
-            logger.debug(f"按键映射失败: {e}")
+            logger.debug(f"Ánh xạ phím thất bại: {e}")
         return None
 
     def _check_shortcuts(self) -> None:
-        """检查是否触发了快捷键."""
+        """Kiểm tra xem có kích hoạt phím tắt không."""
         if not self._shortcuts:
             return
 
-        # 检查修饰键状态
+        # Kiểm tra trạng thái phím bổ trợ
         ctrl = any(k in self._pressed_keys for k in ("ctrl", "control"))
         alt = any(k in self._pressed_keys for k in ("alt", "option"))
         shift = "shift" in self._pressed_keys
@@ -182,16 +182,16 @@ class PynputShortcutBackend(ShortcutBackend):
 
         for name, config in self._shortcuts.items():
             if self._match_shortcut(config, ctrl, alt, shift, cmd):
-                logger.debug(f"触发快捷键: {name}")
+                logger.debug(f"Kích hoạt phím tắt: {name}")
                 self._run_callback(name)
 
     def _match_shortcut(
         self, config: ShortcutConfig, ctrl: bool, alt: bool, shift: bool, cmd: bool
     ) -> bool:
-        """检查是否匹配快捷键配置."""
+        """Kiểm tra xem có khớp với cấu hình phím tắt không."""
         modifier = config.modifier.lower()
 
-        # 检查修饰键
+        # Kiểm tra phím bổ trợ
         if modifier == "ctrl" and not ctrl:
             return False
         if modifier == "alt" and not alt:
@@ -201,50 +201,50 @@ class PynputShortcutBackend(ShortcutBackend):
         if modifier == "cmd" and not cmd:
             return False
 
-        # 检查主键
+        # Kiểm tra phím chính
         return config.key.lower() in {k.lower() for k in self._pressed_keys}
 
     def _start_health_check(self) -> None:
-        """启动健康检查任务."""
+        """Khởi động task kiểm tra sức khỏe."""
         if self._loop:
             self._health_check_task = asyncio.run_coroutine_threadsafe(
                 self._health_check_loop(), self._loop
             )
 
     async def _health_check_loop(self) -> None:
-        """健康检查循环."""
+        """Vòng lặp kiểm tra sức khỏe."""
         while self._running:
             await asyncio.sleep(self._check_interval)
 
             if not self._running:
                 break
 
-            # 检查监听器是否仍在运行
+            # Kiểm tra xem listener có còn đang chạy không
             if self._listener and not self._listener.is_alive():
-                logger.warning("pynput 监听器已停止，尝试重启...")
+                logger.warning("Listener pynput đã dừng, đang thử khởi động lại...")
                 await self._restart_listener()
 
     async def _restart_listener(self) -> None:
-        """重启监听器."""
+        """Khởi động lại listener."""
         try:
-            # 停止旧的监听器
+            # Dừng listener cũ
             if self._listener:
                 try:
                     self._listener.stop()
                 except Exception as e:
-                    logger.debug(f"停止 Pynput 监听器失败: {e}")
+                    logger.debug(f"Dừng listener Pynput thất bại: {e}")
                 self._listener = None
 
-            # 短暂等待
+            # Chờ một khoảng ngắn
             await asyncio.sleep(0.5)
 
-            # 创建新的监听器
+            # Tạo listener mới
             self._listener = keyboard.Listener(
                 on_press=self._on_key_press,
                 on_release=self._on_key_release,
             )
             self._listener.start()
             self._pressed_keys.clear()
-            logger.info("pynput 监听器重启成功")
+            logger.info("Khởi động lại listener pynput thành công")
         except Exception as e:
-            logger.error(f"重启 pynput 监听器失败: {e}", exc_info=True)
+            logger.error(f"Khởi động lại listener pynput thất bại: {e}", exc_info=True)

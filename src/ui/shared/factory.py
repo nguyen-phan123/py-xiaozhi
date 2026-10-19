@@ -35,7 +35,7 @@ def create_viewport(
 
     if normalized == "gpio":
         if sys.platform != "linux":
-            logger.warning(f"GPIO 仅支持 Linux（当前 {sys.platform}），回退到 cli 界面")
+            logger.warning(f"GPIO chỉ hỗ trợ Linux (hiện tại là {sys.platform}), quay về giao diện CLI")
         else:
             from src.ui.gpio import GpioViewManager
 
@@ -43,7 +43,7 @@ def create_viewport(
             return GpioViewManager(event_bus=event_bus, task_manager=task_manager)
 
     elif normalized != "cli":
-        logger.warning(f"未知 UI 模式 {mode!r}，回退 cli")
+        logger.warning(f"Chế độ UI không xác định {mode!r}, quay về CLI")
 
     from src.ui.cli import CliViewManager
 

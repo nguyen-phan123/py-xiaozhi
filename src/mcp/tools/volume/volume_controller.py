@@ -38,15 +38,15 @@ class VolumeController:
 
             return LinuxVolumeBackend()
 
-        self.logger.warning(f"不支持的操作系统: {self.system}")
-        raise NotImplementedError(f"不支持的操作系统: {self.system}")
+        self.logger.warning(f"Hệ điều hành không được hỗ trợ: {self.system}")
+        raise NotImplementedError(f"Hệ điều hành không được hỗ trợ: {self.system}")
 
     def get_volume(self) -> int:
         """获取当前音量 (0-100)."""
         try:
             return self._backend.get_volume()
         except Exception as e:
-            self.logger.warning(f"获取音量失败: {e}", exc_info=True)
+            self.logger.warning(f"Lấy âm lượng thất bại: {e}", exc_info=True)
             return self.DEFAULT_VOLUME
 
     def set_volume(self, volume: int) -> None:
@@ -55,7 +55,7 @@ class VolumeController:
         try:
             self._backend.set_volume(volume)
         except Exception as e:
-            self.logger.warning(f"设置音量失败: {e}", exc_info=True)
+            self.logger.warning(f"Đặt âm lượng thất bại: {e}", exc_info=True)
 
     @staticmethod
     def check_dependencies() -> bool:
@@ -93,11 +93,11 @@ class VolumeController:
         if not missing:
             return True
         logger = get_logger()
-        logger.warning(f"音量控制需要以下依赖，但未找到: {', '.join(missing)}")
+        logger.warning(f"Điều khiển âm lượng cần các dependency sau nhưng không tìm thấy: {', '.join(missing)}")
         if system in ["Windows", "Darwin"]:
-            logger.warning(f"请使用以下命令安装: pip install {' '.join(missing)}")
+            logger.warning(f"Vui lòng dùng lệnh sau để cài đặt: pip install {' '.join(missing)}")
         elif system == "Linux":
             logger.warning(
-                f"请使用以下命令安装: sudo apt-get install {' '.join(missing)}"
+                f"Vui lòng dùng lệnh sau để cài đặt: sudo apt-get install {' '.join(missing)}"
             )
         return False

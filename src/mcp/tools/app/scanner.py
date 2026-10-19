@@ -26,7 +26,7 @@ async def scan_installed_applications(args: Dict[str, Any]) -> str:
     """
     try:
         force_refresh = args.get("force_refresh", False)
-        logger.info(f"[AppScanner] 开始扫描已安装应用程序，强制刷新: {force_refresh}")
+        logger.info(f"[AppScanner] Bắt đầu quét ứng dụng đã cài đặt, buộc làm mới: {force_refresh}")
 
         # 获取系统对应的扫描器
         scanner = get_system_scanner()
@@ -53,7 +53,7 @@ async def scan_installed_applications(args: Dict[str, Any]) -> str:
             "message": f"成功扫描到 {len(apps)} 个已安装应用程序",
         }
 
-        logger.info(f"[AppScanner] 扫描完成，找到 {len(apps)} 个应用程序")
+        logger.info(f"[AppScanner] Quét hoàn tất, tìm thấy {len(apps)} ứng dụng")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:
@@ -82,7 +82,7 @@ async def list_running_applications(args: Dict[str, Any]) -> str:
     """
     try:
         filter_name = args.get("filter_name", "")
-        logger.info(f"[AppScanner] 开始列出正在运行的应用程序，过滤条件: {filter_name}")
+        logger.info(f"[AppScanner] Bắt đầu liệt kê ứng dụng đang chạy, điều kiện lọc: {filter_name}")
 
         # 获取系统对应的扫描器
         scanner = get_system_scanner()
@@ -119,10 +119,10 @@ async def list_running_applications(args: Dict[str, Any]) -> str:
             "success": True,
             "total_count": len(apps),
             "applications": apps,
-            "message": f"找到 {len(apps)} 个正在运行的应用程序",
+            "message": f"找到 {len(apps)} ứng dụng đang chạy",
         }
 
-        logger.info(f"[AppScanner] 列出完成，找到 {len(apps)} 个正在运行的应用程序")
+        logger.info(f"[AppScanner] Liệt kê hoàn tất, tìm thấy {len(apps)} ứng dụng đang chạy")
         return json.dumps(result, ensure_ascii=False, indent=2)
 
     except Exception as e:

@@ -85,7 +85,7 @@ class PlaybackEngine:
 
     def _get_audio_codec(self) -> AudioCodec | None:
         if self.audio_codec is None:
-            logger.warning("AudioCodec 未设置，音乐播放功能不可用")
+            logger.warning("AudioCodec chưa được thiết lập, tính năng phát nhạc không khả dụng")
         return self.audio_codec
 
     async def _clear_music_queue(self) -> int:
@@ -109,7 +109,7 @@ class PlaybackEngine:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            logger.debug(f"等待播放任务结束时异常: {e}")
+            logger.debug(f"Ngoại lệ khi chờ tác vụ phát kết thúc: {e}")
         self._playback_task = None
 
     async def stop(self) -> dict:
@@ -127,7 +127,7 @@ class PlaybackEngine:
             audio_codec = self._get_audio_codec()
             if audio_codec:
                 await audio_codec.clear_music_queue()
-            logger.debug(f"停止时清空 {cleared} 帧音乐数据")
+            logger.debug(f"Dọn dẹp {cleared} khung dữ liệu nhạc")
 
             self.is_playing = False
             self.paused = False
@@ -137,10 +137,10 @@ class PlaybackEngine:
             self.api_url = None
 
             await self._hooks.emit_state_change("stopped", current_song)
-            logger.info(f"停止播放: {current_song}")
+            logger.info(f"Dừng phát: {current_song}")
             return {"status": "success", "message": "已停止"}
         except Exception as e:
-            logger.error(f"停止播放失败: {e}", exc_info=True)
+            logger.error(f"Dừng phát thất bại: {e}", exc_info=True)
             return {"status": "error", "message": f"停止失败: {str(e)}"}
 
     async def pause(self, source: str = "manual") -> dict:
@@ -152,7 +152,7 @@ class PlaybackEngine:
                 if self.pause_source != source:
                     old = self.pause_source
                     self.pause_source = source
-                    logger.info(f"更新暂停来源: {old} → {source}")
+                    logger.info(f"Cập nhật nguồn tạm dừng: {old} → {source}")
                 return {"status": "info", "message": "已经处于暂停状态"}
 
             self.paused = True
@@ -166,7 +166,7 @@ class PlaybackEngine:
                 # TTS 逐句闪避：保留解码器与队列（解码器会在满队列处
                 # 自然等位），恢复零成本，不用逐句重启 ffmpeg
                 logger.info(
-                    f"暂停播放(tts, 保留解码器): {self.current_song} "
+                    f"Tạm dừng phát (tts, giữ decoder): {self.current_song} "
                     f"at {fmt(self.current_position)}"
                 )
                 return {"status": "success", "message": "已暂停"}
@@ -181,12 +181,12 @@ class PlaybackEngine:
                 # 手动暂停要立即静音：把 codec 侧音乐余量也清掉
                 await audio_codec.clear_music_queue()
             logger.info(
-                f"暂停播放: {self.current_song} at {fmt(self.current_position)}, "
-                f"来源: {source}, 清空 {cleared} 帧音乐队列"
+                f"Tạm dừng phát: {self.current_song} at {fmt(self.current_position)}, "
+                f"nguồn: {source}, xóa {cleared} khung hàng đợi nhạc"
             )
             return {"status": "success", "message": "已暂停"}
         except Exception as e:
-            logger.error(f"暂停播放失败: {e}", exc_info=True)
+            logger.error(f"Tạm dừng phát thất bại: {e}", exc_info=True)
             return {"status": "error", "message": f"暂停失败: {str(e)}"}
 
     async def resume(self) -> dict:
@@ -208,7 +208,7 @@ class PlaybackEngine:
                 self.start_play_time = time.time() - self.current_position
                 self.last_lyric_tick = 0.0
                 logger.info(
-                    f"恢复播放(tts, 解码器直连): {self.current_song} from "
+                    f"Tiếp tục phát (tts, decoder kết nối trực tiếp): {self.current_song} from "
                     f"{self._hooks.format_time(self.current_position)}"
                 )
                 await self._hooks.emit_state_change("playing", self.current_song)
@@ -229,13 +229,13 @@ class PlaybackEngine:
 
             fmt = self._hooks.format_time
             logger.info(
-                f"恢复播放: {self.current_song} from {fmt(self.current_position)}"
+                f"Tiếp tục phát: {self.current_song} from {fmt(self.current_position)}"
             )
 
             await self._cancel_playback_task()
             cleared = await self._clear_music_queue()
             if cleared > 0:
-                logger.debug(f"恢复前清空 {cleared} 帧残留数据")
+                logger.debug(f"Xóa {cleared} khung dữ liệu còn tồn")
 
             if self.decoder:
                 await self.decoder.stop()
@@ -271,7 +271,7 @@ class PlaybackEngine:
             await self._hooks.emit_state_change("playing", self.current_song)
             return {"status": "success", "message": "已恢复播放"}
         except Exception as e:
-            logger.error(f"恢复播放失败: {e}", exc_info=True)
+            logger.error(f"Tiếp tục phát thất bại: {e}", exc_info=True)
             return {"status": "error", "message": f"恢复失败: {str(e)}"}
 
     async def seek(
@@ -301,13 +301,13 @@ class PlaybackEngine:
                 if self.total_duration <= 0:
                     return {
                         "status": "error",
-                        "message": "未知歌曲总时长，无法按百分比跳转",
+                        "message": "không rõ歌曲总时长，无法按百分比跳转",
                     }
                 p = max(0.0, min(100.0, float(percent)))
                 target = self.total_duration * (p / 100.0)
                 logger.info(
-                    f"按百分比跳转: {p:.0f}% → {fmt(target)} "
-                    f"(总时长 {fmt(self.total_duration)})"
+                    f"Nhảy theo phần trăm: {p:.0f}% → {fmt(target)} "
+                    f"(tổng thời lượng {fmt(self.total_duration)})"
                 )
             elif position is not None and position >= 0:
                 target = float(position)
@@ -333,7 +333,7 @@ class PlaybackEngine:
                 # 只清音乐播放队列；TTS 队列独立，不受跳转影响
                 await audio_codec.clear_music_queue()
 
-            logger.info(f"跳转到 {fmt(target)}，清空 {cleared} 帧音乐数据")
+            logger.info(f"Nhảy đến {fmt(target)}, xóa {cleared} khung dữ liệu nhạc")
             success = await self.start_playback(
                 self._current_source,
                 target,
@@ -343,7 +343,7 @@ class PlaybackEngine:
                 return {
                     "status": "success",
                     "message": (
-                        f"已跳转到 {fmt(target)}"
+                        f"已Nhảy đến {fmt(target)}"
                         + (
                             f"（约 {percent:.0f}%）"
                             if percent is not None and percent >= 0
@@ -353,8 +353,8 @@ class PlaybackEngine:
                 }
             return {"status": "error", "message": "跳转失败"}
         except Exception as e:
-            logger.error(f"跳转失败: {e}", exc_info=True)
-            return {"status": "error", "message": f"跳转失败: {str(e)}"}
+            logger.error(f"Nhảy vị trí thất bại: {e}", exc_info=True)
+            return {"status": "error", "message": f"Nhảy vị trí thất bại: {str(e)}"}
 
     async def get_position(self):
         if not self.is_playing or self.paused:
@@ -379,13 +379,13 @@ class PlaybackEngine:
         )
         if not media_url:
             logger.error(
-                f"刷新播放地址失败: {self._downloader.last_error or '未知'}"
+                f"Làm mới URL phát nhạc thất bại: {self._downloader.last_error or 'không rõ'}"
             )
             return False
         self._current_source = media_url
         self._stream_headers = self._downloader.media_headers(media_url)
         host = urlparse(media_url).hostname or media_url[:48]
-        logger.info(f"已刷新流地址: {host}")
+        logger.info(f"Đã làm mới URL luồng: {host}")
         if self.song_id:
             self._downloader.start_prefetch(
                 media_url, self.song_id, self._stream_headers
@@ -395,7 +395,7 @@ class PlaybackEngine:
     async def play_url(self, api_url: str) -> bool:
         try:
             if not self._get_audio_codec():
-                logger.error("无法获取 AudioCodec，播放失败")
+                logger.error("Không thể lấy AudioCodec, phát thất bại")
                 return False
 
             if self.is_playing:
@@ -407,7 +407,7 @@ class PlaybackEngine:
             if self.song_id:
                 cached = self._cache.find_song_file(self.song_id)
                 if cached is not None:
-                    logger.info(f"使用本地缓存播放: {cached}")
+                    logger.info(f"Sử dụng cache local để phát: {cached}")
                     self.api_url = None
                     duration = await MusicDecoder.get_duration(cached)
                     if duration > 0:
@@ -415,7 +415,7 @@ class PlaybackEngine:
                     return await self.start_playback(cached)
 
             if self._hooks.is_speaking():
-                logger.info("TTS 进行中，先占住播放会话，说完再开流")
+                logger.info("TTS đang chạy, chiếm trước phiên phát, nói xong mới mở luồng")
                 self._current_source = None
                 self._stream_headers = None
                 self.is_playing = True
@@ -437,7 +437,7 @@ class PlaybackEngine:
             )
             if not media_url:
                 detail = self._downloader.last_error or "未能解析播放地址"
-                logger.error(f"获取播放地址失败: {detail}")
+                logger.error(f"Lấy URL phát thất bại: {detail}")
                 return False
 
             headers = self._downloader.media_headers(media_url)
@@ -445,17 +445,17 @@ class PlaybackEngine:
                 duration = await MusicDecoder.get_duration(media_url, headers=headers)
                 if duration > 0:
                     self.total_duration = duration
-                    logger.info(f"从流探测时长: {duration:.2f}秒")
+                    logger.info(f"Dò thời lượng từ luồng: {duration:.2f}s")
                 else:
-                    logger.warning("无法获取流时长，将使用歌词时长或0")
+                    logger.warning("Không thể lấy thời lượng luồng, sẽ dùng thời lượng lời bài hát hoặc 0")
 
             host = urlparse(media_url).hostname or media_url[:48]
-            logger.info(f"流式播放: {host}")
+            logger.info(f"Phát dạng stream: {host}")
             if self.song_id:
                 self._downloader.start_prefetch(media_url, self.song_id, headers)
             return await self.start_playback(media_url, headers=headers)
         except Exception as e:
-            logger.error(f"播放失败: {e}", exc_info=True)
+            logger.error(f"Phát thất bại: {e}", exc_info=True)
             return False
 
     async def start_playback(
@@ -469,7 +469,7 @@ class PlaybackEngine:
             self._stream_headers = headers if is_http_url(source) else None
 
             if self._hooks.is_speaking():
-                logger.info("TTS 进行中，本地音源已就绪，说完再播")
+                logger.info("TTS đang chạy, nguồn âm local đã sẵn sàng, nói xong mới phát")
                 if self.decoder:
                     await self.decoder.stop()
                     self.decoder = None
@@ -490,7 +490,7 @@ class PlaybackEngine:
             await self._cancel_playback_task()
             cleared = await self._clear_music_queue()
             if cleared > 0:
-                logger.debug(f"开始播放前清空 {cleared} 帧音乐数据")
+                logger.debug(f"Xóa {cleared} khung dữ liệu nhạc")
 
             self.decoder = MusicDecoder(
                 sample_rate=AudioConfig.OUTPUT_SAMPLE_RATE,
@@ -503,7 +503,7 @@ class PlaybackEngine:
                 headers=self._stream_headers,
             )
             if not success:
-                logger.error("启动音频解码器失败")
+                logger.error("Khởi động bộ giải mã âm thanh thất bại")
                 return False
 
             self.is_playing = True
@@ -519,13 +519,13 @@ class PlaybackEngine:
             )
 
             position_info = f" from {start_position:.1f}s" if start_position > 0 else ""
-            logger.info(f"开始播放: {self.current_song}{position_info}")
+            logger.info(f"Bắt đầu phát: {self.current_song}{position_info}")
             await self._hooks.emit_state_change(
                 "playing", self.current_song, start_position
             )
             return True
         except Exception as e:
-            logger.error(f"启动播放失败: {e}", exc_info=True)
+            logger.error(f"Khởi động phát thất bại: {e}", exc_info=True)
             return False
 
     async def _playback_loop(self):
@@ -542,19 +542,19 @@ class PlaybackEngine:
                         self._music_queue.get(), timeout=5.0
                     )
                 except asyncio.TimeoutError:
-                    logger.warning("音乐队列读取超时")
+                    logger.warning("Đọc hàng đợi nhạc timeout")
                     continue
 
                 if audio_data is None:
-                    logger.info("音乐播放完成")
+                    logger.info("Phát nhạc hoàn tất")
                     await self._handle_playback_finished()
                     break
 
                 await self._write_to_audio_codec(audio_data)
         except asyncio.CancelledError:
-            logger.debug("播放循环被取消")
+            logger.debug("Vòng lặp phát nhạc đã bị hủy")
         except Exception as e:
-            logger.error(f"播放循环异常: {e}", exc_info=True)
+            logger.error(f"Ngoại lệ vòng lặp phát: {e}", exc_info=True)
 
     async def _write_to_audio_codec(self, pcm_data: np.ndarray):
         try:
@@ -567,18 +567,18 @@ class PlaybackEngine:
                 pcm_data = pcm_data.astype(np.float32)
             await audio_codec.write_pcm_direct(pcm_data)
         except Exception as e:
-            logger.error(f"写入 AudioCodec 失败: {e}", exc_info=True)
+            logger.error(f"Ghi vào AudioCodec thất bại: {e}", exc_info=True)
 
     async def _handle_playback_finished(self):
         if not self.is_playing:
             return
-        logger.info(f"歌曲播放完成: {self.current_song}")
+        logger.info(f"Phát xong bài hát: {self.current_song}")
         if self.decoder:
             await self.decoder.stop()
             self.decoder = None
         if self.song_id and self._cache.find_song_file(self.song_id):
             self._library.invalidate()
-            logger.debug(f"播放结束，本地缓存可用: {self.song_id}")
+            logger.debug(f"Kết thúc phát, cache local khả dụng: {self.song_id}")
 
         if self._playback_task and not self._playback_task.done():
             if self._playback_task is not asyncio.current_task():

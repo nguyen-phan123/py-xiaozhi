@@ -94,10 +94,10 @@ class SettingsModel(
                 target(*args)
             except Exception as e:
                 logger.error(
-                    f"设置页后台任务失败 ({name or target}): {e}", exc_info=True
+                    f"Tác vụ nền trang cài đặt thất bại ({name or target}): {e}", exc_info=True
                 )
                 try:
-                    self.statusMessage.emit(f"[错误] {e}")
+                    self.statusMessage.emit(f"[Lỗi] {e}")
                 except Exception:
                     pass
                 if test_kind is not None:
@@ -125,12 +125,12 @@ class SettingsModel(
             if self._config_path.exists():
                 with open(self._config_path, encoding="utf-8") as f:
                     self._config = json.load(f)
-                logger.debug("设置配置已加载")
+                logger.debug("Cấu hình cài đặt đã tải")
             else:
-                logger.warning(f"配置文件不存在: {self._config_path}")
+                logger.warning(f"File cấu hình không tồn tại: {self._config_path}")
                 self._config = {}
         except Exception as e:
-            logger.error(f"加载配置失败: {e}", exc_info=True)
+            logger.error(f"Tải cấu hình thất bại: {e}", exc_info=True)
             self._config = {}
 
     def _get_value(self, path: str, default: Any = None) -> Any:
@@ -183,18 +183,18 @@ class SettingsModel(
             try:
                 self._config_manager.reload_config()
             except Exception as e:
-                logger.warning(f"ConfigManager 重载失败: {e}", exc_info=True)
-            logger.info("设置已保存")
+                logger.warning(f"ConfigManager tải lại thất bại: {e}", exc_info=True)
+            logger.info("Cài đặt đã lưu")
             self._snapshot_mcp_disabled()
             if mcp_changed:
-                self.statusMessage.emit("配置已保存（MCP 工具变更，将重连以更新）")
+                self.statusMessage.emit("Cấu hình đã lưu (Công cụ MCP thay đổi, sẽ kết nối lại để cập nhật)")
                 self.mcpToolsNeedReconnect.emit()
             else:
-                self.statusMessage.emit("配置已保存")
+                self.statusMessage.emit("Cấu hình đã lưu")
             self.configSaved.emit()
         except Exception as e:
-            logger.error(f"保存配置失败: {e}", exc_info=True)
-            self.set_error(f"保存配置失败: {e}")
+            logger.error(f"Lưu cấu hình thất bại: {e}", exc_info=True)
+            self.set_error(f"Lưu cấu hình thất bại: {e}")
 
     @Slot()
     def reload(self):
@@ -205,7 +205,7 @@ class SettingsModel(
         self._load_wake_word()
         self._snapshot_mcp_disabled()
         self.settingsChanged.emit()
-        logger.info("设置已重新加载")
+        logger.info("Cài đặt đã tải lại")
 
     # ========== QML Properties（实现见各 mixin）==========
     clientId = Property(str, SettingsSystemOptionsMixin._get_clientId, SettingsSystemOptionsMixin._set_clientId, notify=settingsChanged)
@@ -351,11 +351,11 @@ class SettingsModel(
             "mcp": self._set_pathMcpPluginsDir,
         }
         titles = {
-            "cache": "选择缓存目录",
-            "log": "选择日志目录",
-            "music": "选择音乐缓存目录",
-            "keywords": "选择唤醒词目录",
-            "mcp": "选择 MCP 插件目录",
+            "cache": "Chọn thư mục bộ đệm",
+            "log": "Chọn thư mục nhật ký",
+            "music": "Chọn thư mục bộ đệm nhạc",
+            "keywords": "Chọn thư mục từ khóa đánh thức",
+            "mcp": "Chọn thư mục plugin MCP",
         }
         if which not in getters:
             return ""

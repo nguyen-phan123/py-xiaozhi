@@ -50,7 +50,7 @@ class MusicMetadata:
         except ID3NoHeaderError:
             return True
         except Exception as e:
-            logger.debug(f"提取元数据失败 {self.filename}: {e}")
+            logger.debug(f"Trích xuất metadata thất bại {self.filename}: {e}")
             return False
 
     def _get_tag_value(self, tags: dict, tag_names: list[str]) -> str | None:

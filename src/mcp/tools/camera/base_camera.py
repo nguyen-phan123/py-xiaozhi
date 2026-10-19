@@ -45,7 +45,7 @@ class BaseCamera(ABC):
         jpeg = capture_jpeg(cfg)
         if not jpeg:
             logger.error(
-                "摄像头采集失败 "
+                "Camera thu thập thất bại "
                 f"(backend={cfg.backend}, device={cfg.device!r}, index={cfg.camera_index})"
             )
             return False

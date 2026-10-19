@@ -25,108 +25,108 @@ class SettingField:
 # 第一期：系统 / 音频 / 摄像头 / 唤醒词
 SETTING_SECTIONS: list[tuple[str, list[SettingField]]] = [
     (
-        "系统",
+        "Hệ thống",
         [
             SettingField(
                 "SYSTEM_OPTIONS.NETWORK.OTA_VERSION_URL",
                 "OTA URL",
-                help="OTA / 激活配置地址",
+                help="Địa chỉ OTA / cấu hình kích hoạt",
             ),
             SettingField(
                 "SYSTEM_OPTIONS.NETWORK.WEBSOCKET_URL",
                 "WebSocket URL",
-                help="WebSocket 服务地址",
+                help="Địa chỉ dịch vụ WebSocket",
             ),
             SettingField(
                 "SYSTEM_OPTIONS.DEVICE_ID",
-                "设备 ID",
-                help="Device-Id（通常为 MAC）",
+                "ID thiết bị",
+                help="Device-Id (thường là MAC)",
             ),
             SettingField(
                 "SYSTEM_OPTIONS.CLIENT_ID",
-                "客户端 ID",
+                "ID máy khách",
                 help="Client-Id",
             ),
         ],
     ),
     (
-        "音频",
+        "Âm thanh",
         [
             SettingField(
                 "AUDIO_DEVICES.input_device_name",
-                "输入设备名",
-                help="按名称匹配麦克风（热插拔后 ID 会变）",
+                "Thiết bị đầu vào",
+                help="Khớp microphone theo tên (ID thay đổi sau khi cắm rút)",
             ),
             SettingField(
                 "AUDIO_DEVICES.output_device_name",
-                "输出设备名",
-                help="按名称匹配扬声器/耳机",
+                "Thiết bị đầu ra",
+                help="Khớp loa/tai nghe theo tên",
             ),
             SettingField(
                 "AUDIO_DEVICES.opus_output_sample_rate",
-                "Opus 输出采样率",
+                "Tần số mẫu Opus",
                 kind="choice",
                 choices=("24000", "16000"),
-                help="官方 24000 / 第三方常 16000",
+                help="Chính thức 24000 / Bên thứ ba 16000",
             ),
             SettingField(
                 "AUDIO_DEVICES.frame_duration",
-                "帧时长 ms",
+                "Độ dài khung ms",
                 kind="choice",
                 choices=("20", "40", "60"),
-                help="20 低延迟 / 60 低 CPU",
+                help="20 độ trễ thấp / 60 CPU thấp",
             ),
         ],
     ),
     (
-        "摄像头",
+        "Camera",
         [
             SettingField(
                 "CAMERA.backend",
-                "采集后端",
+                "Backend thu hình",
                 kind="choice",
                 choices=("auto", "opencv", "picamera2"),
-                help="auto 先 OpenCV，失败再 Pi CSI",
+                help="auto ưu tiên OpenCV, thất bại chuyển Pi CSI",
             ),
             SettingField(
                 "CAMERA.device",
-                "设备路径",
-                help="如 /dev/video0；非空优先于 index",
+                "Đường dẫn thiết bị",
+                help="Ví dụ /dev/video0; ưu tiên hơn index",
             ),
             SettingField(
                 "CAMERA.camera_index",
-                "设备 index",
+                "Index thiết bị",
                 kind="int",
-                help="OpenCV 数字索引",
+                help="Chỉ số số nguyên OpenCV",
             ),
             SettingField(
                 "CAMERA.frame_width",
-                "宽度",
+                "Chiều rộng",
                 kind="int",
             ),
             SettingField(
                 "CAMERA.frame_height",
-                "高度",
+                "Chiều cao",
                 kind="int",
             ),
         ],
     ),
     (
-        "唤醒词",
+        "Từ đánh thức",
         [
             SettingField(
                 "WAKE_WORD_OPTIONS.USE_WAKE_WORD",
-                "启用唤醒词",
+                "Bật từ đánh thức",
                 kind="bool",
             ),
             SettingField(
                 "WAKE_WORD_OPTIONS.WAKE_WORD",
-                "唤醒词",
-                help="如：你好小智",
+                "Từ đánh thức",
+                help="Ví dụ: Xin chào Xiaozhi",
             ),
             SettingField(
                 "WAKE_WORD_OPTIONS.WAKE_WORD_LANG",
-                "语言",
+                "Ngôn ngữ",
                 kind="choice",
                 choices=("zh", "en"),
             ),
@@ -159,7 +159,7 @@ def parse_field_value(field: SettingField, text: str) -> Any:
             return 0
         return int(s)
     if field.kind == "bool":
-        return s.lower() in ("1", "true", "yes", "on", "是")
+        return s.lower() in ("1", "true", "yes", "on", "có", "bật", "đúng", "dung", "co", "bat", "是")
     if field.kind == "choice":
         if field.choices and s not in field.choices:
             # 仍写入用户值，由上层校验提示
@@ -190,12 +190,12 @@ def save_settings(values: dict[str, str]) -> tuple[bool, str]:
                     continue
                 updates[f.path] = parse_field_value(f, values[f.path])
         if not updates:
-            return True, "无变更"
+            return True, "Không có thay đổi"
         ok = cfg.update_configs(updates)
         if not ok:
-            return False, "保存失败（写盘错误）"
-        logger.info(f"TUI 已保存 {len(updates)} 项配置")
-        return True, f"已保存 {len(updates)} 项"
+            return False, "Lưu thất bại (lỗi ghi đĩa)"
+        logger.info(f"TUI đã lưu {len(updates)} mục cấu hình")
+        return True, f"Đã lưu {len(updates)} mục"
     except Exception as e:
-        logger.error(f"TUI 保存配置失败: {e}", exc_info=True)
-        return False, f"保存失败: {e}"
+        logger.error(f"TUI lưu cấu hình thất bại: {e}", exc_info=True)
+        return False, f"Lưu thất bại: {e}"

@@ -78,12 +78,12 @@ class MusicDecoder:
                 await check.wait()
             except FileNotFoundError:
                 logger.warning(
-                    "ffprobe 不可用（未找到内置 libs/ffmpeg 且系统 PATH 无 ffprobe），"
-                    f"无法获取音频时长。尝试路径: {ffprobe}"
+                    "ffprobe không khả dụng (không tìm thấy libs/ffmpeg tích hợp và PATH hệ thống không có ffprobe), "
+                    f"không thể lấy thời lượng âm thanh. Đường dẫn đã thử: {ffprobe}"
                 )
                 return 0
             except OSError as e:
-                logger.warning(f"ffprobe 启动失败: {ffprobe}: {e}", exc_info=True)
+                logger.warning(f"Khởi động ffprobe thất bại: {ffprobe}: {e}", exc_info=True)
                 return 0
 
             cmd = [ffprobe, "-v", "error"]
@@ -108,15 +108,15 @@ class MusicDecoder:
             if process.returncode == 0:
                 duration_str = stdout.decode("utf-8").strip()
                 duration = float(duration_str)
-                logger.debug(f"解析音频时长: {duration:.2f}秒 ({_source_label(source)})")
+                logger.debug(f"Phân tích thời lượng âm thanh: {duration:.2f}s ({_source_label(source)})")
                 return duration
             else:
                 error_msg = stderr.decode("utf-8", errors="ignore")
-                logger.warning(f"ffprobe 获取时长失败: {error_msg}")
+                logger.warning(f"ffprobe lấy thời lượng thất bại: {error_msg}")
                 return 0
 
         except Exception as e:
-            logger.warning(f"解析音频时长失败: {e}", exc_info=True)
+            logger.warning(f"Phân tích thời lượng âm thanh thất bại: {e}", exc_info=True)
             return 0
 
     def __init__(self, sample_rate: int = 24000, channels: int = 1):
@@ -143,7 +143,7 @@ class MusicDecoder:
         if not http:
             path = Path(source)
             if not path.exists():
-                logger.error(f"音频文件不存在: {path}")
+                logger.error(f"Tệp âm thanh không tồn tại: {path}")
                 return False
             source = path
 
@@ -162,23 +162,23 @@ class MusicDecoder:
                 await result.wait()
                 if result.returncode not in (0, None):
                     logger.error(
-                        f"FFmpeg 无法启动（退出码 {result.returncode}）: {ffmpeg}。"
-                        "安装包应内置可移植二进制；若仍失败请反馈版本与平台。"
-                        "源码运行请执行 ./scripts/bundle_ffmpeg.sh 或安装系统 ffmpeg"
+                        f"FFmpeg không thể khởi động (exit code {result.returncode}): {ffmpeg}. "
+                        "Bản cài đặt nên tích hợp sẵn binary; nếu vẫn thất bại vui lòng phản hồi phiên bản và nền tảng. "
+                        "Nếu chạy từ nguồn vui lòng chạy ./scripts/bundle_ffmpeg.sh hoặc cài đặt ffmpeg hệ thống"
                     )
                     return False
             except FileNotFoundError:
                 logger.error(
-                    "FFmpeg 不可用：未找到内置 libs/ffmpeg/<plat>/<arch>/ffmpeg，"
-                    f"且系统 PATH 中也没有。尝试路径: {ffmpeg}。"
-                    "安装包用户无需单独安装系统 FFmpeg；若使用安装包仍失败，"
-                    "请重新下载完整安装包。源码运行请安装 ffmpeg 或执行 "
+                    "FFmpeg không khả dụng: không tìm thấy libs/ffmpeg/<plat>/<arch>/ffmpeg tích hợp, "
+                    f"và PATH hệ thống cũng không có. Đường dẫn đã thử: {ffmpeg}. "
+                    "Người dùng bản cài đặt không cần cài FFmpeg riêng; nếu vẫn thất bại, "
+                    "vui lòng tải lại gói cài đặt đầy đủ. Nếu chạy từ nguồn vui lòng cài ffmpeg hoặc chạy "
                     "./scripts/bundle_ffmpeg.sh"
                 )
                 return False
             except OSError as e:
                 logger.error(
-                    f"FFmpeg 启动失败（可能缺少动态库）: {ffmpeg}: {e}",
+                    f"Khởi động FFmpeg thất bại (có thể thiếu thư viện động): {ffmpeg}: {e}",
                     exc_info=True,
                 )
                 return False
@@ -224,15 +224,15 @@ class MusicDecoder:
             self._decode_task = asyncio.create_task(self._read_pcm_stream(output_queue))
 
             position_info = f" from {start_position:.1f}s" if start_position > 0 else ""
-            mode = "流式" if http else "文件"
+            mode = "luồng" if http else "tập tin"
             logger.info(
-                f"开始解码音频({mode}): {_source_label(source)}{position_info} "
+                f"Bắt đầu giải mã âm thanh ({mode}): {_source_label(source)}{position_info} "
                 f"[{self.sample_rate}Hz, {self.channels}ch]"
             )
             return True
 
         except Exception as e:
-            logger.error(f"启动音频解码失败: {e}", exc_info=True)
+            logger.error(f"Khởi động giải mã âm thanh thất bại: {e}", exc_info=True)
             return False
 
     async def _read_pcm_stream(self, output_queue: asyncio.Queue):
@@ -240,8 +240,8 @@ class MusicDecoder:
         frame_size_samples = int(self.sample_rate * (frame_duration_ms / 1000))
         frame_size_bytes = frame_size_samples * 2 * self.channels
         logger.info(
-            f"解码器参数: 帧大小={frame_size_samples}样本, "
-            f"{frame_size_bytes}字节, {frame_duration_ms}ms"
+            f"Tham số decoder: kích thước khung={frame_size_samples} mẫu, "
+            f"{frame_size_bytes} byte, {frame_duration_ms}ms"
         )
 
         eof_reached = False
@@ -254,7 +254,7 @@ class MusicDecoder:
                 if not chunk:
                     duration_decoded = frame_count * frame_duration_ms / 1000
                     logger.info(
-                        f"音频解码完成，共 {frame_count} 帧，时长约 {duration_decoded:.1f}秒"
+                        f"Giải mã âm thanh hoàn tất, tổng cộng {frame_count} khung, thời lượng khoảng {duration_decoded:.1f}s"
                     )
 
                     if self._process:
@@ -269,7 +269,7 @@ class MusicDecoder:
                                 if err.strip():
                                     logger.warning(f"FFmpeg: {err.strip()[:300]}")
                         except Exception as e:
-                            logger.debug(f"读取 FFmpeg stderr 失败: {e}")
+                            logger.debug(f"Đọc stderr của FFmpeg thất bại: {e}")
 
                     eof_reached = True
                     break
@@ -289,22 +289,22 @@ class MusicDecoder:
                 await output_queue.put(audio_array)
 
         except asyncio.CancelledError:
-            logger.debug("解码任务被取消")
+            logger.debug("Tác vụ giải mã đã bị hủy")
         except Exception as e:
-            logger.error(f"读取 PCM 流失败: {e}", exc_info=True)
+            logger.error(f"Đọc luồng PCM thất bại: {e}", exc_info=True)
         finally:
             if eof_reached:
                 try:
                     await output_queue.put(None)
                 except Exception as e:
-                    logger.debug(f"发送 EOF 信号失败: {e}")
+                    logger.debug(f"Gửi tín hiệu EOF thất bại: {e}")
 
     async def stop(self):
         if self._stopped:
             return
 
         self._stopped = True
-        logger.debug("停止音频解码器")
+        logger.debug("Dừng bộ giải mã âm thanh")
 
         if self._decode_task and not self._decode_task.done():
             self._decode_task.cancel()
@@ -313,7 +313,7 @@ class MusicDecoder:
             except asyncio.CancelledError:
                 pass
             except Exception as e:
-                logger.error(f"解码任务异常: {e}", exc_info=True)
+                logger.error(f"Ngoại lệ tác vụ giải mã: {e}", exc_info=True)
 
         proc = self._process
         self._process = None
@@ -326,12 +326,12 @@ class MusicDecoder:
                     proc.kill()
                     await proc.wait()
                 except Exception as e:
-                    logger.debug(f"强制结束 FFmpeg 失败: {e}")
+                    logger.debug(f"Buộc kết thúc FFmpeg thất bại: {e}")
             except ProcessLookupError:
                 pass
             except Exception as e:
                 if str(e).strip():
-                    logger.debug(f"结束 FFmpeg 进程: {e}")
+                    logger.debug(f"Kết thúc tiến trình FFmpeg: {e}")
 
     def is_running(self) -> bool:
         return (
@@ -345,4 +345,4 @@ class MusicDecoder:
             try:
                 await self._decode_task
             except Exception as e:
-                logger.error(f"等待解码完成失败: {e}", exc_info=True)
+                logger.error(f"Chờ giải mã hoàn tất thất bại: {e}", exc_info=True)

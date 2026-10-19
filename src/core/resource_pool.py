@@ -1,7 +1,7 @@
-"""资源池.
+"""Resource pool.
 
-统一的资源注册与释放机制。所有需要清理的资源（C扩展、音频流、网络连接等）
-注册到池中，shutdown 时按注册的逆序统一释放，避免重复释放和遗漏。
+Cơ chế đăng ký và giải phóng tài nguyên tập trung. Tất cả tài nguyên cần dọn dẹp (tiện ích mở rộng C, audio stream, kết nối mạng, v.v.)
+được đăng ký vào pool, khi shutdown sẽ giải phóng đồng loạt theo thứ tự ngược lại lúc đăng ký, tránh giải phóng lặp lại hoặc bỏ sót.
 """
 
 import asyncio
@@ -15,13 +15,13 @@ CleanupFunc = Callable[[], Union[None, Awaitable[None]]]
 
 
 class ResourcePool:
-    """资源池 — 注册清理函数，逆序统一释放.
+    """Resource pool — Đăng ký các hàm dọn dẹp, giải phóng đồng loạt theo thứ tự ngược lại.
 
-    用法:
+    Cách dùng:
         pool = ResourcePool()
         pool.register("opus_codec", opus_codec.close)
         pool.register("audio_stream", stream_manager.stop)
-        await pool.shutdown()  # 逆序执行所有清理函数
+        await pool.shutdown()  # Thực thi tất cả hàm dọn dẹp theo thứ tự ngược lại
     """
 
     def __init__(self):
@@ -29,19 +29,19 @@ class ResourcePool:
         self._shutting_down = False
 
     def register(self, name: str, cleanup: CleanupFunc) -> None:
-        """注册一个清理函数.
+        """Đăng ký một hàm dọn dẹp.
 
         Args:
-            name: 资源名称（用于日志和排查）
-            cleanup: 清理函数，可以是普通函数或 async 函数
+            name: Tên tài nguyên (dùng cho log và gỡ lỗi)
+            cleanup: Hàm dọn dẹp, có thể là hàm thông thường hoặc async function
         """
         if self._shutting_down:
-            logger.warning(f"资源池正在关闭，跳过注册: {name}")
+            logger.warning(f"Resource pool đang đóng, bỏ qua đăng ký: {name}")
             return
         self._resources.append((name, cleanup))
 
     async def shutdown(self) -> None:
-        """释放所有已注册的资源，按注册顺序的逆序执行."""
+        """Giải phóng tất cả tài nguyên đã đăng ký, thực thi theo thứ tự ngược với lúc đăng ký."""
         if self._shutting_down:
             return
         self._shutting_down = True
@@ -52,7 +52,7 @@ class ResourcePool:
                 if asyncio.iscoroutine(result):
                     await result
             except Exception as e:
-                logger.error(f"释放资源失败 [{name}]: {e}", exc_info=True)
+                logger.error(f"Giải phóng tài nguyên thất bại [{name}]: {e}", exc_info=True)
 
         self._resources.clear()
-        logger.debug("资源池已清空")
+        logger.debug("Resource pool đã được dọn sạch")

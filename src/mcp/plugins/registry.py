@@ -36,7 +36,7 @@ class PluginRegistry:
             pass
         names = set(self.tools_for_plugin(plugin_id))
         if not names:
-            logger.info("[MCP插件] 卸载 %s：无已注册工具", plugin_id)
+            logger.info("[MCP Plugin] Gỡ bỏ %s: không có tool đã đăng ký", plugin_id)
             return 0
         before = len(server.tools)
         server.tools = [t for t in server.tools if t.name not in names]
@@ -44,7 +44,7 @@ class PluginRegistry:
         for n in names:
             self.tool_owner.pop(n, None)
         logger.info(
-            "[MCP插件] 已卸载 %s：移除 %d 个工具 %s",
+            "[MCP Plugin] Đã gỡ bỏ %s: xóa %d tool %s",
             plugin_id,
             removed,
             sorted(names),

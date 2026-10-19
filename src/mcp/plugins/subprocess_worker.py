@@ -183,7 +183,7 @@ def main() -> int:
         try:
             msg = _read_msg()
         except Exception as e:
-            _log(f"读消息失败: {e}")
+            _log(f"Đọc message thất bại: {e}")
             return 1
         if msg is None:
             break

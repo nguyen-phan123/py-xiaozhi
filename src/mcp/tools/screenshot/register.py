@@ -40,7 +40,7 @@ def register_screenshot_tools(
             if token and hasattr(camera, "set_explain_token"):
                 camera.set_explain_token(token)
         except Exception as e:
-            logger.debug(f"同步 vision 配置到截图摄像头失败: {e}", exc_info=True)
+            logger.debug(f"Đồng bộ cấu hình vision sang camera chụp màn hình thất bại: {e}", exc_info=True)
 
     # analyze 若需要 fallback 到 photo camera 的 explain 设置，挂引用
     camera._photo_camera_ref = photo_camera  # type: ignore[attr-defined]
@@ -111,4 +111,4 @@ def register_screenshot_tools(
             take_screenshot,
         )
     )
-    logger.info("已注册 take_screenshot（无全局单例）")
+    logger.info("Đã đăng ký take_screenshot (không dùng singleton toàn cục)")

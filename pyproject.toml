@@ -193,3 +193,17 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+# ============================================================
+# Pyright 配置
+# ============================================================
+[tool.pyright]
+extraPaths = ["."]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "off"
+
+[tool.pyrefly]
+python-interpreter-path = ".venv/bin/python"
+preset = "off"
+disable-type-errors-in-ide = true

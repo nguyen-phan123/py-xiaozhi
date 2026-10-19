@@ -54,7 +54,7 @@ class WakeWordDetector:
             # 1. 检查配置是否启用
             config = get_config()
             if not config.get_config("WAKE_WORD_OPTIONS.USE_WAKE_WORD", False):
-                logger.info("唤醒词功能已禁用")
+                logger.info("Tính năng từ đánh thức đã bị vô hiệu hóa")
                 self.enabled = False
                 return False
 
@@ -68,7 +68,7 @@ class WakeWordDetector:
             self._model_dir = get_app_root() / model_path
 
             if not self._model_dir.exists():
-                logger.error(f"模型目录不存在: {self._model_dir}")
+                logger.error(f"Thư mục mô hình không tồn tại: {self._model_dir}")
                 self.enabled = False
                 return False
 
@@ -84,11 +84,11 @@ class WakeWordDetector:
 
             self.enabled = True
             self._model_loaded = True
-            logger.info(f"唤醒词检测器初始化成功: {self._model_dir}")
+            logger.info(f"Khởi tạo bộ nhận diện từ đánh thức thành công: {self._model_dir}")
             return True
 
         except Exception as e:
-            logger.error(f"唤醒词检测器初始化失败: {e}", exc_info=True)
+            logger.error(f"Khởi tạo bộ nhận diện từ đánh thức thất bại: {e}", exc_info=True)
             self.enabled = False
             return False
 
@@ -102,14 +102,14 @@ class WakeWordDetector:
 
         # Validate
         if not 0.1 <= self._keywords_threshold <= 1.0:
-            logger.warning(f"关键词阈值 {self._keywords_threshold} 超出范围，重置为0.25")
+            logger.warning(f"Ngưỡng từ khóa {self._keywords_threshold} vượt quá phạm vi, đặt lại thành 0.25")
             self._keywords_threshold = 0.25
 
         if not 0.1 <= self._keywords_score <= 10.0:
-            logger.warning(f"关键词分数 {self._keywords_score} 超出范围，重置为2.0")
+            logger.warning(f"Điểm từ khóa {self._keywords_score} vượt quá phạm vi, đặt lại thành 2.0")
             self._keywords_score = 2.0
 
-        logger.debug(f"KWS配置: 阈值={self._keywords_threshold}, 分数={self._keywords_score}")
+        logger.debug(f"Cấu hình KWS: ngưỡng={self._keywords_threshold}, điểm={self._keywords_score}")
 
     def _load_model(self) -> bool:
         """Load sherpa-onnx KeywordSpotter model."""
@@ -127,7 +127,7 @@ class WakeWordDetector:
             required_files = [encoder_path, decoder_path, joiner_path, tokens_path, keywords_path]
             for file_path in required_files:
                 if not file_path.exists():
-                    logger.error(f"模型文件不存在: {file_path}")
+                    logger.error(f"Tệp mô hình không tồn tại: {file_path}")
                     return False
 
             # Windows: sherpa-onnx C++ 用 std::ifstream(narrow_char*) 读取 tokens.txt，
@@ -135,7 +135,7 @@ class WakeWordDetector:
             # 将 tokens.txt 复制到 ASCII 安全路径的用户目录下。
             tokens_path = self._ensure_ascii_path(tokens_path, lang)
 
-            logger.info(f"加载 KeywordSpotter 模型: {self._model_dir}")
+            logger.info(f"Tải mô hình KeywordSpotter: {self._model_dir}")
 
             with self._onnx_lock:
                 self._keyword_spotter = sherpa_onnx.KeywordSpotter(
@@ -154,14 +154,14 @@ class WakeWordDetector:
                     provider=self._provider,
                 )
 
-            logger.info("KeywordSpotter 模型加载成功")
+            logger.info("Tải mô hình KeywordSpotter thành công")
             return True
 
         except ImportError as e:
-            logger.error(f"sherpa_onnx 导入失败: {e}", exc_info=True)
+            logger.error(f"Import sherpa_onnx thất bại: {e}", exc_info=True)
             return False
         except Exception as e:
-            logger.error(f"加载模型失败: {e}", exc_info=True)
+            logger.error(f"Tải mô hình thất bại: {e}", exc_info=True)
             return False
 
     @staticmethod
@@ -185,7 +185,7 @@ class WakeWordDetector:
         safe_dir = get_user_keywords_path(lang).parent
         safe_path = safe_dir / file_path.name
         shutil.copy2(file_path, safe_path)
-        logger.debug(f"已复制 {file_path.name} 到 ASCII 安全路径: {safe_path}")
+        logger.debug(f"Đã sao chép {file_path.name} sang đường dẫn ASCII an toàn: {safe_path}")
         return safe_path
 
     def _release_model(self):
@@ -208,10 +208,10 @@ class WakeWordDetector:
                     del stream
 
                 self._model_loaded = False
-                logger.debug("模型资源已释放")
+                logger.debug("Tài nguyên mô hình đã được giải phóng")
 
             except Exception as e:
-                logger.debug(f"释放模型资源时出错: {e}")
+                logger.debug(f"Lỗi khi giải phóng tài nguyên mô hình: {e}")
 
     def on_detected(self, callback: Callable):
         self.on_detected_callback = callback
@@ -232,15 +232,15 @@ class WakeWordDetector:
             except (asyncio.QueueEmpty, asyncio.QueueFull):
                 pass
         except Exception as e:
-            logger.debug(f"音频数据入队失败: {type(e).__name__}: {e}")
+            logger.debug(f"Đưa dữ liệu âm thanh vào hàng đợi thất bại: {type(e).__name__}: {e}")
 
     async def start(self, audio_codec) -> bool:
         if not self.enabled:
-            logger.warning("唤醒词功能未启用")
+            logger.warning("Tính năng từ đánh thức chưa được bật")
             return False
 
         if not self._keyword_spotter:
-            logger.error("模型未加载，请先调用 initialize()")
+            logger.error("Mô hình chưa được tải, vui lòng gọi initialize() trước")
             return False
 
         try:
@@ -260,11 +260,11 @@ class WakeWordDetector:
             # Start detection task
             self._detection_task = asyncio.create_task(self._detection_loop())
 
-            logger.info("唤醒词检测器已启动")
+            logger.info("Bộ nhận diện từ đánh thức đã khởi động")
             return True
 
         except Exception as e:
-            logger.error(f"启动检测器失败: {e}", exc_info=True)
+            logger.error(f"Khởi động bộ nhận diện thất bại: {e}", exc_info=True)
             return False
 
     async def stop(self):
@@ -309,13 +309,13 @@ class WakeWordDetector:
             self._audio_queue = None
 
         self._stopping = False
-        logger.info("唤醒词检测器已停止")
+        logger.info("Bộ nhận diện từ đánh thức đã dừng")
 
     async def reload(self, model_path: Optional[str] = None) -> bool:
         was_running = self._running
         codec = self.audio_codec
 
-        logger.info(f"热重载唤醒词模型: {model_path}")
+        logger.info(f"Hot-reload mô hình từ đánh thức: {model_path}")
 
         # Re-initialize with new model
         if not await self.initialize(model_path):
@@ -332,7 +332,7 @@ class WakeWordDetector:
         await self.stop()
         self._release_model()
         self.enabled = False
-        logger.info("唤醒词检测器已关闭")
+        logger.info("Bộ nhận diện từ đánh thức đã đóng")
 
     def pause(self):
         """Pause detection (keeps model loaded)."""
@@ -362,16 +362,16 @@ class WakeWordDetector:
                 if "no running event loop" in str(e) or "Event loop is closed" in str(e):
                     break
                 error_count += 1
-                logger.error(f"检测循环错误 ({error_count}/{MAX_ERRORS}): {e}", exc_info=True)
+                logger.error(f"Lỗi vòng lặp nhận diện ({error_count}/{MAX_ERRORS}): {e}", exc_info=True)
 
                 if error_count >= MAX_ERRORS:
-                    logger.critical("达到最大错误次数，停止检测")
+                    logger.critical("Đạt số lần lỗi tối đa, dừng nhận diện")
                     break
 
                 await asyncio.sleep(1)
             except Exception as e:
                 error_count += 1
-                logger.error(f"检测循环错误 ({error_count}/{MAX_ERRORS}): {e}", exc_info=True)
+                logger.error(f"Lỗi vòng lặp nhận diện ({error_count}/{MAX_ERRORS}): {e}", exc_info=True)
 
                 if self.on_error:
                     try:
@@ -380,10 +380,10 @@ class WakeWordDetector:
                         else:
                             self.on_error(e)
                     except Exception as cb_error:
-                        logger.error(f"错误回调失败: {cb_error}")
+                        logger.error(f"Callback lỗi thất bại: {cb_error}")
 
                 if error_count >= MAX_ERRORS:
-                    logger.critical("达到最大错误次数，停止检测")
+                    logger.critical("Đạt số lần lỗi tối đa, dừng nhận diện")
                     break
 
                 await asyncio.sleep(1)
@@ -422,7 +422,7 @@ class WakeWordDetector:
                         detected_result = result
                         self._keyword_spotter.reset_stream(self._stream)
             except Exception as e:
-                logger.debug(f"处理音频时出错: {e}")
+                logger.debug(f"Lỗi khi xử lý âm thanh: {e}")
 
         if detected_result is not None:
             await self._handle_detection(detected_result)
@@ -445,7 +445,7 @@ class WakeWordDetector:
                     else:
                         self.on_detected_callback(result, result)
                 except Exception as e:
-                    logger.error(f"唤醒词回调执行失败: {e}", exc_info=True)
+                    logger.error(f"Thực thi callback từ đánh thức thất bại: {e}", exc_info=True)
         finally:
             # 快速退出：正在停止时跳过延迟和队列清理
             if self._stopping:

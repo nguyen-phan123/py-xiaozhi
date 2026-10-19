@@ -38,10 +38,10 @@ class LocalLibrary:
         playlist: list[MusicMetadata] = []
         music_files = self._cache.list_music_files()
         if not music_files and not self._cache.root.exists():
-            logger.warning(f"缓存目录不存在: {self._cache.root}")
+            logger.warning(f"Thư mục cache không tồn tại: {self._cache.root}")
             return playlist
 
-        logger.debug(f"找到 {len(music_files)} 个音乐文件")
+        logger.debug(f"Tìm thấy {len(music_files)} tệp nhạc")
 
         for file_path in music_files:
             try:
@@ -50,12 +50,12 @@ class LocalLibrary:
                     metadata.extract_metadata()
                 playlist.append(metadata)
             except Exception as e:
-                logger.debug(f"处理音乐文件失败 {file_path.name}: {e}")
+                logger.debug(f"Xử lý tệp nhạc thất bại {file_path.name}: {e}")
 
         playlist.sort(key=lambda x: (x.artist or "Unknown", x.title or x.filename))
         self._playlist = playlist
         self._last_scan_time = now
-        logger.info(f"扫描完成，找到 {len(playlist)} 首本地音乐")
+        logger.info(f"Quét hoàn tất, tìm thấy {len(playlist)} bài hát local")
         return playlist
 
     def get_playlist(self, force_refresh: bool = False) -> dict:
@@ -72,15 +72,15 @@ class LocalLibrary:
             formatted = [m.display_name() for m in playlist]
             return {
                 "status": "success",
-                "message": f"找到 {len(playlist)} 首本地音乐",
+                "message": f"Tìm thấy {len(playlist)} bài hát local",
                 "playlist": formatted,
                 "total_count": len(playlist),
             }
         except Exception as e:
-            logger.error(f"获取本地歌单失败: {e}", exc_info=True)
+            logger.error(f"Lấy danh sách phát local thất bại: {e}", exc_info=True)
             return {
                 "status": "error",
-                "message": f"获取本地歌单失败: {str(e)}",
+                "message": f"Lấy danh sách phát local thất bại: {str(e)}",
                 "playlist": [],
                 "total_count": 0,
             }
@@ -121,12 +121,12 @@ class LocalLibrary:
 
             return {
                 "status": "success",
-                "message": f"在本地音乐中找到 {len(results)} 首匹配的歌曲",
+                "message": f"在本地音乐中Tìm thấy {len(results)} 首匹配的歌曲",
                 "results": results,
                 "found_count": len(results),
             }
         except Exception as e:
-            logger.error(f"搜索本地音乐失败: {e}", exc_info=True)
+            logger.error(f"Tìm kiếm nhạc local thất bại: {e}", exc_info=True)
             return {
                 "status": "error",
                 "message": f"搜索失败: {str(e)}",

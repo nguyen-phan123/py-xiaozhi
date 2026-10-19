@@ -69,4 +69,4 @@ def register_camera_tools(add_tool: Callable[[McpTool], None], camera) -> None:
             take_photo,
         )
     )
-    logger.info("已注册 take_photo（容器注入 camera）")
+    logger.info("Đã đăng ký take_photo (container inject camera)")

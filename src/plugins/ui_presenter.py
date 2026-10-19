@@ -1,4 +1,4 @@
-"""把状态/协议消息画到界面上."""
+"""Hiển thị trạng thái và tin nhắn giao thức lên giao diện."""
 
 from typing import TYPE_CHECKING, Optional
 
@@ -12,19 +12,19 @@ logger = get_logger()
 
 
 class UiPresenter:
-    """写界面：对话、音乐、状态、表情、按钮等."""
+    """Viết giao diện: hội thoại, âm nhạc, trạng thái, biểu cảm, nút bấm, v.v"""
 
     STATE_TEXT_MAP = {
-        DeviceState.IDLE: "待命",
-        DeviceState.LISTENING: "聆听中...",
-        DeviceState.SPEAKING: "说话中...",
+        DeviceState.IDLE: "Chờ lệnh",
+        DeviceState.LISTENING: "Đang lắng nghe...",
+        DeviceState.SPEAKING: "Đang nói...",
     }
 
     MUSIC_STATE_TEXT = {
-        "playing": "正在播放: {song}",
-        "paused": "已暂停: {song}",
-        "stopped": "已停止: {song}",
-        "completed": "播放完成: {song}",
+        "playing": "Đang phát: {song}",
+        "paused": "Đã tạm dừng: {song}",
+        "stopped": "Đã dừng: {song}",
+        "completed": "Phát xong: {song}",
     }
 
     def __init__(self, viewport: Optional["ViewPort"] = None) -> None:
@@ -70,14 +70,14 @@ class UiPresenter:
             self.set_status(status_text, connected=True)
 
     def show_network_error(self) -> None:
-        self.set_status("未连接", connected=False)
+        self.set_status("Chưa kết nối", connected=False)
 
     def show_music_state(self, data) -> None:
         try:
             from src.mcp.tools.music.events import MusicStateData
 
             if not isinstance(data, MusicStateData):
-                logger.warning(f"收到非法的音乐状态数据: {type(data)}")
+                logger.warning(f"Nhận được dữ liệu trạng thái nhạc không hợp lệ: {type(data)}")
                 return
 
             template = self.MUSIC_STATE_TEXT.get(data.state)
@@ -85,20 +85,20 @@ class UiPresenter:
                 return
             text = template.format(song=data.song)
             self.set_music_line(text)
-            logger.debug(f"UI 更新音乐状态: {data.state}")
+            logger.debug(f"UI cập nhật trạng thái nhạc: {data.state}")
         except Exception as e:
-            logger.error(f"处理音乐状态变化失败: {e}", exc_info=True)
+            logger.error(f"Xử lý thay đổi trạng thái nhạc thất bại: {e}", exc_info=True)
 
     def show_music_lyrics(self, data) -> None:
         try:
             from src.mcp.tools.music.events import MusicLyricsData
 
             if not isinstance(data, MusicLyricsData):
-                logger.warning(f"收到非法的歌词数据: {type(data)}")
+                logger.warning(f"Nhận được dữ liệu lời bài hát không hợp lệ: {type(data)}")
                 return
             self.set_music_line(data.text)
         except Exception as e:
-            logger.error(f"处理歌词更新失败: {e}", exc_info=True)
+            logger.error(f"Xử lý cập nhật lời bài hát thất bại: {e}", exc_info=True)
 
     def show_protocol_message(self, message) -> None:
         if not isinstance(message, dict):

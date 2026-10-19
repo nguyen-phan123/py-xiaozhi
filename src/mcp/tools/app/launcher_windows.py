@@ -26,7 +26,7 @@ def launch_application(app_name: str) -> bool:
         bool: 启动是否成功
     """
     try:
-        logger.info(f"[WindowsLauncher] 启动应用程序: {app_name}")
+        logger.info(f"[WindowsLauncher] Khởi chạy ứng dụng: {app_name}")
 
         # 按优先级尝试不同的启动方法
         launch_methods = [
@@ -41,18 +41,18 @@ def launch_application(app_name: str) -> bool:
         for method_name, method_func in launch_methods:
             try:
                 if method_func(app_name):
-                    logger.info(f"[WindowsLauncher] {method_name}成功启动: {app_name}")
+                    logger.info(f"[WindowsLauncher] {method_name}Khởi chạy thành công: {app_name}")
                     return True
                 else:
-                    logger.debug(f"[WindowsLauncher] {method_name}启动失败: {app_name}")
+                    logger.debug(f"[WindowsLauncher] {method_name}Khởi chạy thất bại: {app_name}")
             except Exception as e:
-                logger.debug(f"[WindowsLauncher] {method_name}异常: {e}")
+                logger.debug(f"[WindowsLauncher] {method_name}Ngoại lệ: {e}")
 
-        logger.warning(f"[WindowsLauncher] 所有Windows启动方法都失败了: {app_name}")
+        logger.warning(f"[WindowsLauncher] Tất cả các phương pháp khởi chạy Windows đều thất bại: {app_name}")
         return False
 
     except Exception as e:
-        logger.error(f"[WindowsLauncher] Windows启动异常: {e}", exc_info=True)
+        logger.error(f"[WindowsLauncher] Ngoại lệ khởi chạy Windows: {e}", exc_info=True)
         return False
 
 
@@ -71,12 +71,12 @@ def launch_uwp_app_by_path(uwp_path: str) -> bool:
                 ["explorer.exe", uwp_path],
                 creationflags=_DETACHED_PROCESS,
             )
-            logger.info(f"[WindowsLauncher] UWP应用启动成功: {uwp_path}")
+            logger.info(f"[WindowsLauncher] Khởi chạy ứng dụng UWP thành công: {uwp_path}")
             return True
         else:
             return False
     except Exception as e:
-        logger.error(f"[WindowsLauncher] UWP应用启动失败: {e}", exc_info=True)
+        logger.error(f"[WindowsLauncher] Khởi chạy ứng dụng UWP thất bại: {e}", exc_info=True)
         return False
 
 
@@ -91,10 +91,10 @@ def launch_shortcut(shortcut_path: str) -> bool:
     """
     try:
         os.startfile(shortcut_path)
-        logger.info(f"[WindowsLauncher] 快捷方式启动成功: {shortcut_path}")
+        logger.info(f"[WindowsLauncher] Khởi chạy qua shortcut thành công: {shortcut_path}")
         return True
     except Exception as e:
-        logger.error(f"[WindowsLauncher] 快捷方式启动失败: {e}", exc_info=True)
+        logger.error(f"[WindowsLauncher] Khởi chạy qua shortcut thất bại: {e}", exc_info=True)
         return False
 
 
@@ -132,7 +132,7 @@ def _try_registry_launch(app_name: str) -> bool:
             )
             return True
     except Exception as e:
-        logger.debug(f"[WindowsLauncher] 注册表查找应用失败: {e}")
+        logger.debug(f"[WindowsLauncher] Tìm ứng dụng trong registry thất bại: {e}")
     return False
 
 
@@ -178,7 +178,7 @@ def _try_where_command(app_name: str) -> bool:
                 )
                 return True
     except Exception as e:
-        logger.debug(f"[WindowsLauncher] where.exe 查找应用失败: {e}")
+        logger.debug(f"[WindowsLauncher] where.exe tìm ứng dụng thất bại: {e}")
     return False
 
 
@@ -266,10 +266,10 @@ def _find_executable_in_registry(app_name: str) -> str | None:
         return None
 
     except ImportError:
-        logger.debug("[WindowsLauncher] winreg模块不可用，跳过注册表查找")
+        logger.debug("[WindowsLauncher] Module winreg không khả dụng, bỏ qua tìm kiếm registry")
         return None
     except Exception as e:
-        logger.debug(f"[WindowsLauncher] 注册表查找失败: {e}")
+        logger.debug(f"[WindowsLauncher] Tìm kiếm registry thất bại: {e}")
         return None
 
 
@@ -322,6 +322,6 @@ def _launch_uwp_app(app_name: str) -> bool:
             return True
 
     except Exception as e:
-        logger.debug(f"[WindowsLauncher] UWP启动异常: {e}")
+        logger.debug(f"[WindowsLauncher] Ngoại lệ khởi chạy UWP: {e}")
 
     return False

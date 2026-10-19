@@ -17,31 +17,31 @@ logger = get_logger()
 async def launch_application(args: dict[str, Any]) -> bool:
     try:
         app_name = args["app_name"]
-        logger.info(f"[AppLauncher] 尝试启动应用程序: {app_name}")
+        logger.info(f"[AppLauncher] Đang thử khởi chạy ứng dụng: {app_name}")
 
         matched_app = await _find_matching_application(app_name)
         if matched_app:
             logger.info(
-                f"[AppLauncher] 找到匹配的应用程序: "
+                f"[AppLauncher] Tìm thấy ứng dụng khớp: "
                 f"{matched_app.get('display_name', matched_app.get('name', ''))}"
             )
             success = await _launch_matched_app(matched_app, app_name)
         else:
-            logger.info(f"[AppLauncher] 未找到精确匹配，使用原始名称: {app_name}")
+            logger.info(f"[AppLauncher] Không tìm thấy khớp chính xác, dùng tên gốc: {app_name}")
             success = await _launch_by_name(app_name)
 
         if success:
-            logger.info(f"[AppLauncher] 成功启动应用程序: {app_name}")
+            logger.info(f"[AppLauncher] Khởi chạy ứng dụng thành công: {app_name}")
         else:
-            logger.warning(f"[AppLauncher] 启动应用程序失败: {app_name}")
+            logger.warning(f"[AppLauncher] Khởi chạy ứng dụng thất bại: {app_name}")
 
         return success
 
     except KeyError:
-        logger.error("[AppLauncher] 缺少app_name参数")
+        logger.error("[AppLauncher] Thiếu tham số app_name")
         return False
     except Exception as e:
-        logger.error(f"[AppLauncher] 启动应用程序失败: {e}", exc_info=True)
+        logger.error(f"[AppLauncher] Khởi chạy ứng dụng thất bại: {e}", exc_info=True)
         return False
 
 
@@ -49,7 +49,7 @@ async def _find_matching_application(app_name: str) -> dict[str, Any] | None:
     try:
         return await find_best_matching_app(app_name, "installed")
     except Exception as e:
-        logger.warning(f"[AppLauncher] 查找匹配应用程序时出错: {e}", exc_info=True)
+        logger.warning(f"[AppLauncher] Lỗi khi tìm ứng dụng khớp: {e}", exc_info=True)
         return None
 
 
@@ -74,7 +74,7 @@ async def _launch_matched_app(
         return await _launch_by_name(app_path)
 
     except Exception as e:
-        logger.error(f"[AppLauncher] 启动匹配应用失败: {e}", exc_info=True)
+        logger.error(f"[AppLauncher] Khởi chạy ứng dụng khớp thất bại: {e}", exc_info=True)
         return False
 
 
@@ -95,9 +95,9 @@ async def _launch_by_name(app_name: str) -> bool:
 
             return await asyncio.to_thread(launch_application, app_name)
         else:
-            logger.error(f"[AppLauncher] 不支持的操作系统: {system}")
+            logger.error(f"[AppLauncher] Hệ điều hành không được hỗ trợ: {system}")
             return False
 
     except Exception as e:
-        logger.error(f"[AppLauncher] 启动应用程序失败: {e}", exc_info=True)
+        logger.error(f"[AppLauncher] Khởi chạy ứng dụng thất bại: {e}", exc_info=True)
         return False

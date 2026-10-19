@@ -1,6 +1,6 @@
-"""事件总线.
+"""EventBus (Hệ thống điều phối sự kiện).
 
-提供组件间解耦通信机制。
+Cung cấp cơ chế giao tiếp tách rời (decoupled) giữa các component.
 """
 
 import asyncio
@@ -13,85 +13,90 @@ from src.logging import get_logger
 logger = get_logger()
 
 
-# 预定义事件名称
+# Tên sự kiện được định nghĩa trước
 class Events:
     """
-    预定义事件常量.
+    Hằng số sự kiện được định nghĩa trước.
     """
 
-    # 设备状态
+    # Trạng thái thiết bị
     DEVICE_STATE_CHANGED = "device_state_changed"
 
-    # 协议相关
+    # Liên quan đến giao thức
     PROTOCOL_CONNECTED = "protocol_connected"
     PROTOCOL_DISCONNECTED = "protocol_disconnected"
     INCOMING_JSON = "incoming_json"
     INCOMING_AUDIO = "incoming_audio"
 
-    # 网络错误
+    # Lỗi mạng
     NETWORK_ERROR = "network_error"
 
-    # 音频通道
+    # Kênh âm thanh
     AUDIO_CHANNEL_OPENED = "audio_channel_opened"
     AUDIO_CHANNEL_CLOSED = "audio_channel_closed"
-    # AudioCodec 生命周期（AudioPlugin → MusicPlayer 等订阅者，避免直连 set）
+    # Vòng đời AudioCodec (AudioPlugin → MusicPlayer v.v. đăng ký lắng nghe, tránh set trực tiếp)
     AUDIO_CODEC_CHANGED = "audio_codec_changed"
-    # 请求重新枚举音频设备（设置页刷新；需先停流再 PortAudio reinit）
-    # payload: 可选 asyncio.Future，完成时 set_result(list|dict|None)
+    # Yêu cầu liệt kê lại thiết bị âm thanh (làm mới trang cài đặt; cần dừng stream trước rồi PortAudio reinit)
+    # payload: asyncio.Future tùy chọn, khi hoàn thành set_result(list|dict|None)
     AUDIO_DEVICES_REFRESH_REQUEST = "audio_devices_refresh_request"
 
-    # 应用生命周期
+    # Vòng đời ứng dụng
     APP_SHUTDOWN = "app_shutdown"
-    # 系统级提示（降级模式横幅等，payload: str）
+    # Thông báo cấp hệ thống (banner chế độ giáng cấp v.v., payload: str)
     SYSTEM_NOTICE = "system_notice"
 
-    # 音乐播放器事件
-    MUSIC_STATE_CHANGED = "music_state_changed"  # 播放状态变化
-    MUSIC_LYRICS_UPDATE = "music_lyrics_update"  # 歌词更新
-    MUSIC_PROGRESS_UPDATE = "music_progress_update"  # 进度更新
+    # Sự kiện trình phát nhạc
+    MUSIC_STATE_CHANGED = "music_state_changed"  # Thay đổi trạng thái phát
+    MUSIC_LYRICS_UPDATE = "music_lyrics_update"  # Cập nhật lời bài hát
+    MUSIC_PROGRESS_UPDATE = "music_progress_update"  # Cập nhật tiến độ phát
 
-    # 音乐控制命令（从外部控制 MusicPlayer）
-    MUSIC_PAUSE_REQUEST = "music_pause_request"  # 请求暂停（如 TTS）
-    MUSIC_RESUME_REQUEST = "music_resume_request"  # 请求恢复
+    # Lệnh điều khiển nhạc (điều khiển MusicPlayer từ bên ngoài)
+    MUSIC_PAUSE_REQUEST = "music_pause_request"  # Yêu cầu tạm dừng (như TTS)
+    MUSIC_RESUME_REQUEST = "music_resume_request"  # Yêu cầu tiếp tục
 
-    # UI 操作（界面 → 插件）
-    UI_BUTTON_PRESS = "ui_button_press"  # 手动：按下
-    UI_BUTTON_RELEASE = "ui_button_release"  # 手动：松开
-    UI_MANUAL_TOGGLE = "ui_manual_toggle"  # 手动：点一下开始/结束录音
-    UI_AUTO_TOGGLE = "ui_auto_toggle"  # 切自动/手动
-    UI_AUTO_START = "ui_auto_start"  # 自动：开始/停止对话
-    UI_ABORT_REQUEST = "ui_abort_request"  # 打断
-    UI_SEND_TEXT = "ui_send_text"  # 发文本
-    UI_QUIT_REQUEST = "ui_quit_request"  # 退出
-    UI_OPEN_SETTINGS = "ui_open_settings"  # 打开设置
-    UI_TOGGLE_WINDOW = "ui_toggle_window"  # 显隐主窗口（GUI）
+    # Thao tác UI (Giao diện → Plugin)
+    UI_BUTTON_PRESS = "ui_button_press"  # Thủ công: Nhấn nút
+    UI_BUTTON_RELEASE = "ui_button_release"  # Thủ công: Thả nút
+    UI_MANUAL_TOGGLE = "ui_manual_toggle"  # Thủ công: Bấm một cái để bắt đầu/kết thúc ghi âm
+    UI_AUTO_TOGGLE = "ui_auto_toggle"  # Chuyển đổi tự động/thủ công
+    UI_AUTO_START = "ui_auto_start"  # Tự động: Bắt đầu/dừng đối thoại
+    UI_ABORT_REQUEST = "ui_abort_request"  # Ngắt lời (abort)
+    UI_SEND_TEXT = "ui_send_text"  # Gửi văn bản
+    UI_QUIT_REQUEST = "ui_quit_request"  # Thoát ứng dụng
+    UI_OPEN_SETTINGS = "ui_open_settings"  # Mở cài đặt
+    UI_TOGGLE_WINDOW = "ui_toggle_window"  # Ẩn/hiện cửa sổ chính (GUI)
 
-    # 配置变更事件
-    CONFIG_CHANGED = "config_changed"  # 配置已变更（需要热重载）
-    # MCP 工具暴露变更后：断开并重连协议，使服务端重新 tools/list
+    # Sự kiện thay đổi cấu hình
+    CONFIG_CHANGED = "config_changed"  # Cấu hình đã thay đổi (cần hot-reload)
+    # Sau khi thay đổi danh sách MCP tool: ngắt và kết nối lại giao thức để server gọi lại tools/list
     PROTOCOL_RECONNECT_REQUEST = "protocol_reconnect_request"
 
 
-# 已知事件名集合：拼写错误时在 on/emit 打 warning（debug 友好）
+# Tập hợp tên sự kiện đã biết: cảnh báo qua warning khi on/emit sai chính tả (hỗ trợ debug)
 _KNOWN_EVENTS: frozenset[str] = frozenset(
     v for k, v in vars(Events).items() if not k.startswith("_") and isinstance(v, str)
 )
 
 
 class EventBus:
-    """事件总线.
+    """EventBus (Hệ thống điều phối sự kiện).
 
-    支持异步事件处理，实现组件间松耦合通信。
+    Hỗ trợ xử lý sự kiện bất đồng bộ, thực hiện giao tiếp ghép lỏng (loose coupling) giữa các component.
 
-    用法:     bus = EventBus()
+    Cách dùng:
+        bus = EventBus()
 
-    # 注册处理器 async def on_state_changed(state):     print(f"State: {state}")
+        # Đăng ký handler
+        async def on_state_changed(state):
+            print(f"State: {state}")
 
-    bus.on(Events.DEVICE_STATE_CHANGED, on_state_changed)
+        bus.on(Events.DEVICE_STATE_CHANGED, on_state_changed)
 
-    # 触发事件 await bus.emit(Events.DEVICE_STATE_CHANGED, DeviceState.LISTENING)
+        # Kích hoạt sự kiện
+        await bus.emit(Events.DEVICE_STATE_CHANGED, DeviceState.LISTENING)
 
-    # 移除处理器 bus.off(Events.DEVICE_STATE_CHANGED, on_state_changed)
+        # Xóa handler
+        bus.off(Events.DEVICE_STATE_CHANGED, on_state_changed)
     """
 
     def __init__(self):
@@ -103,71 +108,71 @@ class EventBus:
     def _warn_if_unknown(event: str, action: str) -> None:
         if event not in _KNOWN_EVENTS:
             logger.warning(
-                f"EventBus: {action} 未知事件名 {event!r}（可能是拼写错误；"
-                "请使用 Events.* 常量）"
+                f"EventBus: {action} tên sự kiện không xác định {event!r} (có thể viết sai chính tả; "
+                "vui lòng dùng hằng số Events.*)"
             )
 
     def on(self, event: str, handler: Callable[..., Awaitable[None]]) -> None:
-        """注册事件处理器.
+        """Đăng ký handler xử lý sự kiện.
 
         Args:
-            event: 事件名称
-            handler: 异步处理函数
+            event: Tên sự kiện
+            handler: Hàm xử lý bất đồng bộ (async handler)
         """
-        self._warn_if_unknown(event, "注册")
+        self._warn_if_unknown(event, "đăng ký")
         if handler not in self._handlers[event]:
             self._handlers[event].append(handler)
-            logger.debug(f"EventBus: 注册处理器 {handler.__name__} -> {event}")
+            logger.debug(f"EventBus: Đăng ký handler {handler.__name__} -> {event}")
 
     def off(self, event: str, handler: Callable[..., Awaitable[None]]) -> None:
-        """移除事件处理器.
+        """Xóa handler xử lý sự kiện.
 
         Args:
-            event: 事件名称
-            handler: 要移除的处理函数
+            event: Tên sự kiện
+            handler: Hàm xử lý cần xóa
         """
         if handler in self._handlers[event]:
             self._handlers[event].remove(handler)
-            logger.debug(f"EventBus: 移除处理器 {handler.__name__} <- {event}")
+            logger.debug(f"EventBus: Xóa handler {handler.__name__} <- {event}")
 
     def clear(self, event: str = None) -> None:
-        """清除事件处理器.
+        """Xóa các handler xử lý sự kiện.
 
         Args:
-            event: 事件名称，为 None 时清除所有
+            event: Tên sự kiện, nếu là None sẽ xóa toàn bộ
         """
         if event is None:
             self._handlers.clear()
-            logger.debug("EventBus: 清除所有处理器")
+            logger.debug("EventBus: Xóa tất cả handler")
         elif event in self._handlers:
             self._handlers[event].clear()
-            logger.debug(f"EventBus: 清除事件 {event} 的所有处理器")
+            logger.debug(f"EventBus: Xóa tất cả handler của sự kiện {event}")
 
     async def emit(self, event: str, data: Any = None) -> None:
-        """触发事件.
+        """Kích hoạt sự kiện.
 
-        并行调用所有注册的处理器。
+        Gọi đồng thời tất cả các handler đã đăng ký.
 
         Args:
-            event: 事件名称
-            data: 事件数据
+            event: Tên sự kiện
+            data: Dữ liệu sự kiện
         """
         handlers = list(self._handlers.get(event, []))
         if not handlers:
-            # 无订阅者时仍提示未知事件名，避免拼写错误静默丢失
-            self._warn_if_unknown(event, "触发")
+            # Khi không có người đăng ký vẫn nhắc nhở nếu tên sự kiện không xác định, tránh mất dấu lỗi chính tả
+            self._warn_if_unknown(event, "kích hoạt")
             return
 
-        logger.debug(f"EventBus: 触发事件 {event}, {len(handlers)} 个处理器")
+        logger.debug(f"EventBus: Kích hoạt sự kiện {event}, {len(handlers)} handler")
 
-        # 并行执行所有处理器
+        # Thực thi đồng thời tất cả handler
         tasks = []
         for handler in handlers:
             try:
                 tasks.append(self._safe_call(handler, data))
             except Exception as e:
                 logger.error(
-                    f"EventBus: 创建任务失败 {handler.__name__}: {e}",
+                    f"EventBus: Tạo tác vụ cho {handler.__name__} thất bại: {e}",
                     exc_info=True,
                 )
 
@@ -175,13 +180,13 @@ class EventBus:
             await asyncio.gather(*tasks, return_exceptions=True)
 
     async def emit_sequential(self, event: str, data: Any = None) -> None:
-        """顺序触发事件.
+        """Kích hoạt sự kiện tuần tự.
 
-        按注册顺序依次调用处理器。
+        Gọi lần lượt các handler theo thứ tự đăng ký.
 
         Args:
-            event: 事件名称
-            data: 事件数据
+            event: Tên sự kiện
+            data: Dữ liệu sự kiện
         """
         handlers = list(self._handlers.get(event, []))
         for handler in handlers:
@@ -191,7 +196,7 @@ class EventBus:
         self, handler: Callable[..., Awaitable[None]], data: Any
     ) -> None:
         """
-        安全调用处理器，捕获异常.
+        Gọi handler an toàn, bắt và xử lý ngoại lệ.
         """
         try:
             if data is None:
@@ -200,18 +205,18 @@ class EventBus:
                 await handler(data)
         except Exception as e:
             logger.error(
-                f"EventBus: 处理器 {handler.__name__} 执行异常: {e}",
+                f"EventBus: Handler {handler.__name__} thực thi gặp ngoại lệ: {e}",
                 exc_info=True,
             )
 
     def has_handlers(self, event: str) -> bool:
         """
-        检查事件是否有处理器.
+        Kiểm tra sự kiện có handler nào hay không.
         """
         return bool(self._handlers.get(event))
 
     def handler_count(self, event: str) -> int:
         """
-        获取事件的处理器数量.
+        Lấy số lượng handler của một sự kiện.
         """
         return len(self._handlers.get(event, []))

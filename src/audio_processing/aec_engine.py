@@ -107,12 +107,12 @@ class AecEngine:
                 )
             self._active = True
             logger.info(
-                f"AEC 引擎已启用 | near {self._near_rate}Hz, "
+                f"AEC engine đã bật | near {self._near_rate}Hz, "
                 f"far {self._far_rate}Hz→{self._near_rate}Hz, "
                 f"delay {self._delay_ms}ms, preprocess={enable_preprocess}"
             )
         except Exception as e:
-            logger.warning(f"AEC 引擎初始化失败，已旁路: {e}")
+            logger.warning(f"Khởi tạo AEC engine thất bại, đã bypass: {e}")
             self._release()
 
     def _init_apm(self, enable_preprocess: bool) -> None:
@@ -153,7 +153,7 @@ class AecEngine:
         if n % self._frame != 0:
             if not self._near_misaligned_logged:
                 self._near_misaligned_logged = True
-                logger.warning(f"采集帧长 {n} 非 10ms 整数倍，AEC 旁路该路径")
+                logger.warning(f"Độ dài khung thu thập {n} không phải bội số của 10ms, AEC bypass đường này")
             return block
 
         try:
@@ -249,7 +249,7 @@ class AecEngine:
         with self._lock:
             self._active = False
             self._release()
-        logger.info("AEC 引擎已关闭")
+        logger.info("AEC engine đã đóng")
 
     def _release(self) -> None:
         self._active = False
@@ -264,19 +264,19 @@ class AecEngine:
         self._far_pending.clear()
         self._far_buffer = np.empty(0, dtype=np.float32)
         if self._far_dropped:
-            logger.debug(f"AEC far 累计丢弃 {self._far_dropped} 块")
+            logger.debug(f"AEC far tích lũy đã bỏ qua {self._far_dropped} khối")
 
     def _on_failure(self, side: str, err: Exception) -> None:
         self._fail_count += 1
         if self._fail_count >= _MAX_CONSECUTIVE_FAILURES:
             logger.error(
-                f"AEC {side} 连续失败 {self._fail_count} 次，自动旁路: {err}",
+                f"AEC {side} thất bại liên tiếp {self._fail_count} lần, tự động bypass: {err}",
                 exc_info=True,
             )
             with self._lock:
                 self._release()
         else:
-            logger.debug(f"AEC {side} 处理失败（{self._fail_count}）: {err}")
+            logger.debug(f"AEC {side} xử lý thất bại ({self._fail_count}): {err}")
 
     @staticmethod
     def _float_to_i16(x: np.ndarray) -> np.ndarray:

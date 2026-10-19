@@ -898,10 +898,10 @@ async def test_ui_plugin_routes_music_to_music_line():
     )
     await plugin.on_incoming_json({"type": "tts", "text": "你好小智"})
 
-    assert any("正在播放" in t for t in vp.music)
+    assert any("Đang phát" in t for t in vp.music)
     assert "[00:01/03:00] 第一句" in vp.music
     assert "你好小智" in vp.chat
-    assert not any("正在播放" in t or "第一句" in t for t in vp.chat)
+    assert not any("Đang phát" in t or "第一句" in t for t in vp.chat)
 
 
 @pytest.mark.asyncio
@@ -1007,12 +1007,12 @@ async def test_auto_session_button_start_stop():
 
     await session.auto_session_toggle()
     assert session.auto_session_active is True
-    assert vp.buttons[-1] == "停止对话"
+    assert vp.buttons[-1] == "Dừng hội thoại"
     assert starts
 
     await session.auto_session_toggle()
     assert session.auto_session_active is False
-    assert vp.buttons[-1] == "开始对话"
+    assert vp.buttons[-1] == "Bắt đầu hội thoại"
     assert "stop" in stops
 
 
@@ -1242,7 +1242,7 @@ async def test_event_bus_warns_on_unknown_event_name(caplog):
     text = caplog.text
     assert "typo_event_that_does_not_exist" in text
     assert "another_typo_event" in text
-    assert "未知事件名" in text
+    assert "không xác định" in text
 
 
 @pytest.mark.asyncio

@@ -206,9 +206,9 @@ def setup_logging(
 
     # 记录日志系统初始化完成
     logger = logging.getLogger(__name__)
-    logger.info("日志系统已初始化")
+    logger.info("Hệ thống ghi log đã được khởi tạo")
     if log_file:
-        logger.debug(f"日志文件: {log_file}")
+        logger.debug(f"File nhật ký: {log_file}")
 
     return log_file
 

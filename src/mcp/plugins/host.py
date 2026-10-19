@@ -57,14 +57,14 @@ class McpHost:
         self._add_tool(tool)
         self._registered_names.append(tool.name)
         logger.info(
-            "[MCP插件:%s] 注册工具: %s", self._plugin_id, tool.name
+            "[MCP Plugin:%s] Đăng ký tool: %s", self._plugin_id, tool.name
         )
 
     def get(self, name: str) -> Any:
         """按白名单返回宿主能力；未授权或未提供则 None."""
         if name not in self._allow_get:
             logger.warning(
-                "[MCP插件:%s] host.get(%r) 不在白名单 %s",
+                "[MCP Plugin:%s] host.get(%r) không nằm trong whitelist %s",
                 self._plugin_id,
                 name,
                 sorted(self._allow_get),

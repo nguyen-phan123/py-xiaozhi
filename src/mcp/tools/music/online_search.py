@@ -31,7 +31,7 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
         limit = int(config.get("SEARCH_LIMIT") or 20)
         base = (config.get("SEARCH_URL") or "").strip() or DEFAULT_SEARCH_URL
         if "://" not in base:
-            logger.warning(f"搜索 API 无效 ({base!r})，改用默认酷我地址")
+            logger.warning(f"API tìm kiếm không hợp lệ ({base!r}), chuyển sang địa chỉ Kuwo mặc định")
             base = DEFAULT_SEARCH_URL
 
         search_url = (
@@ -43,7 +43,7 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
             f"&mobi=1&issubtitle=1"
         )
 
-        logger.info(f"搜索歌曲: {song_name} | {base}")
+        logger.info(f"Tìm kiếm bài hát: {song_name} | {base}")
 
         response = None
         for attempt in range(3):
@@ -58,9 +58,9 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
                 break
             except requests.exceptions.Timeout:
                 if attempt < 2:
-                    logger.warning(f"搜索超时，重试 ({attempt + 1}/2)")
+                    logger.warning(f"Tìm kiếm timeout, thử lại ({attempt + 1}/2)")
                     continue
-                logger.error(f"搜索歌曲超时，已重试 2 次: {song_name}")
+                logger.error(f"Tìm kiếm bài hát timeout, đã thử lại 2 lần: {song_name}")
                 return None
 
         if response is None:
@@ -69,7 +69,7 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
         data = response.json()
         results = data.get("abslist", [])
         if not results:
-            logger.warning(f"未找到歌曲: {song_name}")
+            logger.warning(f"Không tìm thấy bài hát: {song_name}")
             return None
 
         first = results[0]
@@ -80,7 +80,7 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
         album = first.get("ALBUM", "")
 
         if not song_id:
-            logger.error("搜索结果中没有歌曲ID")
+            logger.error("Trong kết quả tìm kiếm không có ID bài hát")
             return None
 
         display_name = title
@@ -101,7 +101,7 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
         url_api = (config.get("URL_API") or "").rstrip("/")
         api_url = f"{url_api}/url/kw/{song_id}/{quality}"
 
-        logger.info(f"找到歌曲: {display_name}, ID: {song_id}")
+        logger.info(f"Tìm thấy bài hát: {display_name}, ID: {song_id}")
         return SearchHit(
             song_id=song_id,
             display_name=display_name,
@@ -110,5 +110,5 @@ async def search_song(song_name: str, config: dict) -> SearchHit | None:
         )
 
     except Exception as e:
-        logger.error(f"搜索歌曲失败: {e}", exc_info=True)
+        logger.error(f"Tìm kiếm bài hát thất bại: {e}", exc_info=True)
         return None

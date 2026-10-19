@@ -55,12 +55,12 @@ class MusicDownloader:
         name = filename or f"{song_id}.mp3"
         hit = self._cache.find_song_file(song_id)
         if hit is not None:
-            logger.info(f"使用缓存: {hit}")
+            logger.info(f"Sử dụng cache: {hit}")
             return hit
 
         cache_path = self._cache.root / name
         if cache_path.exists():
-            logger.info(f"使用缓存: {cache_path}")
+            logger.info(f"Sử dụng cache: {cache_path}")
             return cache_path
 
         return await self.download(api_url, name, song_id=song_id)
@@ -165,7 +165,7 @@ class MusicDownloader:
             return response.json()
         except Exception as e:
             logger.warning(
-                f"请求失败 {urlparse(url).netloc}: {e}", exc_info=True
+                f"Yêu cầu thất bại {urlparse(url).netloc}: {e}", exc_info=True
             )
             return None
 
@@ -194,7 +194,7 @@ class MusicDownloader:
         headers = self._lx_headers()
 
         for candidate in self._candidate_lx_urls(api_url):
-            logger.debug(f"尝试直链 API: {candidate}")
+            logger.debug(f"Thử API link trực tiếp: {candidate}")
             data = await self._fetch_json(candidate, headers)
             if data is None:
                 last_reason = "直链 API 网络请求失败"
@@ -202,11 +202,11 @@ class MusicDownloader:
 
             real_url = self._extract_url_from_payload(data)
             if real_url:
-                logger.info(f"直链 API 解析成功: {real_url[:80]}...")
+                logger.info(f"Phân giải API link trực tiếp thành công: {real_url[:80]}...")
                 return real_url, None
 
             last_reason = self._describe_api_failure(data)
-            logger.warning(f"直链 API 未返回 URL: {data}")
+            logger.warning(f"API link trực tiếp không trả về URL: {data}")
 
             # IP 被封了换音质也没用
             if "封禁" in (last_reason or "") or "禁止批量下载" in str(data):
@@ -226,7 +226,7 @@ class MusicDownloader:
 
         for br in ("320kmp3", "128kmp3"):
             url = f"{_KUWO_PLAYURL}?mid={song_id}&type=music&httpsStatus=1&br={br}"
-            logger.debug(f"尝试酷我官方 playUrl: mid={song_id} br={br}")
+            logger.debug(f"Thử playUrl chính thức của Kuwo: mid={song_id} br={br}")
             data = await self._fetch_json(url, headers)
             if data is None:
                 last_reason = "酷我官方接口网络请求失败"
@@ -234,7 +234,7 @@ class MusicDownloader:
 
             real_url = self._extract_url_from_payload(data)
             if real_url:
-                logger.info(f"酷我官方接口解析成功: {real_url[:80]}...")
+                logger.info(f"Phân giải interface Kuwo chính thức thành công: {real_url[:80]}...")
                 return real_url, None
 
             msg = ""
@@ -277,7 +277,7 @@ class MusicDownloader:
                     reasons.append(reason)
 
             self.last_error = "；".join(reasons) if reasons else "未能解析播放地址"
-            logger.error(f"未能解析播放 URL: {self.last_error}")
+            logger.error(f"Không thể phân giải URL phát nhạc: {self.last_error}")
             return None
         except Exception as e:
             self.last_error = f"解析播放 URL 异常: {e}"
@@ -312,7 +312,7 @@ class MusicDownloader:
             except (requests.RequestException, OSError) as e:
                 last_err = e
                 logger.warning(
-                    f"下载重试 {attempt + 1}/3 失败: {e}"
+                    f"Thử lại tải xuống {attempt + 1}/3 thất bại: {e}"
                 )
         assert last_err is not None
         raise last_err
@@ -332,7 +332,7 @@ class MusicDownloader:
             cache_path = self._cache.root / filename
             headers = self.media_headers(download_url)
             logger.debug(
-                f"开始下载音频: host={urlparse(download_url).hostname}"
+                f"Bắt đầu tải âm thanh: host={urlparse(download_url).hostname}"
             )
 
             result = await asyncio.to_thread(
@@ -342,7 +342,7 @@ class MusicDownloader:
                 temp_path,
                 cache_path,
             )
-            logger.info(f"音乐下载完成并缓存: {result}")
+            logger.info(f"Tải nhạc hoàn tất và đã cache: {result}")
             return result
         except Exception as e:
             self.last_error = f"下载失败: {e}"
@@ -351,7 +351,7 @@ class MusicDownloader:
                 try:
                     temp_path.unlink()
                 except Exception as cleanup_e:
-                    logger.debug(f"清理临时文件失败: {cleanup_e}")
+                    logger.debug(f"Dọn dẹp tệp tạm thời thất bại: {cleanup_e}")
             return None
 
     def start_prefetch(
@@ -369,7 +369,7 @@ class MusicDownloader:
             return
         self._cache.prepare()
         if self._cache.find_song_file(song_id) is not None:
-            logger.debug(f"已有缓存，跳过预取: {song_id}")
+            logger.debug(f"Đã có cache, bỏ qua prefetch: {song_id}")
             return
 
         # 同一首歌已在预取
@@ -387,7 +387,7 @@ class MusicDownloader:
             self._prefetch_copy_loop(media_url, song_id, hdrs),
             name=f"music:prefetch:{song_id}",
         )
-        logger.info(f"后台预取缓存: song_id={song_id}")
+        logger.info(f"Prefetch cache nền: song_id={song_id}")
 
     def cancel_prefetch(self) -> None:
         """取消后台预取（换歌时）."""
@@ -413,7 +413,7 @@ class MusicDownloader:
             if not ok:
                 return
             if not part.exists() or part.stat().st_size <= 1024:
-                logger.warning(f"预取文件过小，丢弃: {part.name}")
+                logger.warning(f"Tệp prefetch quá nhỏ, hủy bỏ: {part.name}")
                 if part.exists():
                     part.unlink()
                 return
@@ -421,10 +421,10 @@ class MusicDownloader:
                 final.unlink()
             part.replace(final)
             logger.info(
-                f"后台预取完成（可本地播）: {final.name} ({final.stat().st_size} bytes)"
+                f"Prefetch nền hoàn tất (có thể phát local): {final.name} ({final.stat().st_size} bytes)"
             )
         except asyncio.CancelledError:
-            logger.debug(f"后台预取取消: {song_id}")
+            logger.debug(f"Hủy prefetch nền: {song_id}")
             try:
                 if part.exists():
                     part.unlink()
@@ -432,7 +432,7 @@ class MusicDownloader:
                 pass
             raise
         except Exception as e:
-            logger.warning(f"后台预取失败 {song_id}: {e}", exc_info=True)
+            logger.warning(f"Prefetch nền thất bại {song_id}: {e}", exc_info=True)
             try:
                 if part.exists():
                     part.unlink()
@@ -484,13 +484,13 @@ class MusicDownloader:
             if proc.returncode != 0:
                 err = (stderr or b"").decode("utf-8", errors="ignore").strip()
                 logger.warning(
-                    f"FFmpeg copy 预取失败 rc={proc.returncode}: {err[:300]}"
+                    f"Prefetch FFmpeg copy thất bại rc={proc.returncode}: {err[:300]}"
                 )
                 return False
             return True
         except FileNotFoundError:
-            logger.warning("FFmpeg 不可用，后台预取跳过")
+            logger.warning("FFmpeg không khả dụng, bỏ qua prefetch nền")
             return False
         except Exception as e:
-            logger.warning(f"FFmpeg copy 预取异常: {e}", exc_info=True)
+            logger.warning(f"Ngoại lệ prefetch FFmpeg copy: {e}", exc_info=True)
             return False

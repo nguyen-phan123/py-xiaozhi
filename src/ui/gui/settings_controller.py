@@ -39,18 +39,18 @@ class SettingsController:
             self._settings_model.mcpToolsNeedReconnect.connect(
                 self._on_mcp_tools_need_reconnect
             )
-            logger.debug("SettingsController: SettingsModel 已懒加载")
+            logger.debug("SettingsController: SettingsModel đã lazy load")
         return self._settings_model
 
     def _on_config_saved(self) -> None:
-        logger.info("SettingsController: 配置已保存，触发热重载")
+        logger.info("SettingsController: Cấu hình đã lưu, kích hoạt hot reload")
         self._tasks.spawn(
             self._event_bus.emit(Events.CONFIG_CHANGED), name="ui:config_changed"
         )
 
     def _on_mcp_tools_need_reconnect(self) -> None:
         """MCP 工具黑名单变更：请求会话层断开并重连以刷新服务端 tools/list."""
-        logger.info("SettingsController: MCP 工具列表变更，请求协议重连")
+        logger.info("SettingsController: Danh sách công cụ MCP thay đổi, yêu cầu kết nối lại giao thức")
         self._tasks.spawn(
             self._event_bus.emit(Events.PROTOCOL_RECONNECT_REQUEST),
             name="ui:protocol_reconnect",
@@ -60,4 +60,4 @@ class SettingsController:
         """reload 配置/设备列表，再让 QML 显示设置窗."""
         self.ensure_model().reload()
         self._bridge.showSettingsWindow.emit()
-        logger.debug("SettingsController: 已发送打开设置窗口信号")
+        logger.debug("SettingsController: Đã gửi tín hiệu mở cửa sổ cài đặt")

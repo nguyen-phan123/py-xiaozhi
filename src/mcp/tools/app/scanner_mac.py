@@ -96,7 +96,7 @@ def scan_installed_applications() -> List[Dict[str, str]]:
     ]
     apps.extend(system_apps)
 
-    logger.info(f"[MacScanner] 扫描完成，找到 {len(apps)} 个应用程序")
+    logger.info(f"[MacScanner] Quét hoàn tất, tìm thấy {len(apps)} ứng dụng")
     return apps
 
 
@@ -144,11 +144,11 @@ def scan_running_applications() -> List[Dict[str, str]]:
                             }
                         )
 
-        logger.info(f"[MacScanner] 找到 {len(apps)} 个正在运行的应用程序")
+        logger.info(f"[MacScanner] Tìm thấy {len(apps)} ứng dụng đang chạy")
         return apps
 
     except Exception as e:
-        logger.error(f"[MacScanner] 扫描运行应用失败: {e}", exc_info=True)
+        logger.error(f"[MacScanner] Quét ứng dụng đang chạy thất bại: {e}", exc_info=True)
         return []
 
 

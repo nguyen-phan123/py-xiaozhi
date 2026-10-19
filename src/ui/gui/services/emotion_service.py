@@ -23,7 +23,7 @@ class EmotionService(QObject):
         self._emotion_dir = get_assets_dir() / "emojis"
 
         if not self._emotion_dir.exists():
-            logger.warning(f"表情目录不存在: {self._emotion_dir}")
+            logger.warning(f"Thư mục biểu cảm không tồn tại: {self._emotion_dir}")
 
     def get_emotion_url(self, emotion_name: str) -> str:
         """获取表情的 QML 可用 URL.
@@ -49,7 +49,7 @@ class EmotionService(QObject):
             url = QUrl.fromLocalFile(str(path)).toString()
         else:
             url = "😊"  # 最终回退
-            logger.warning(f"表情 {emotion_name} 未找到，使用 emoji")
+            logger.warning(f"Không tìm thấy biểu cảm {emotion_name}, sử dụng emoji")
 
         self._cache[emotion_name] = url
         return url
@@ -70,4 +70,4 @@ class EmotionService(QObject):
         """预加载表情."""
         for name in names:
             self.get_emotion_url(name)
-        logger.debug(f"已预加载 {len(names)} 个表情")
+        logger.debug(f"Đã tải trước {len(names)} biểu cảm")

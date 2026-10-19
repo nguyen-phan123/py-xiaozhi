@@ -1,29 +1,14 @@
 {
-  "python.formatting.provider": "black",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.typeCheckingMode": "off",
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always",
     "source.fixAll": "explicit"
   },
-  "python.formatting.blackArgs": [
-    "--line-length",
-    "88",
-    "--target-version",
-    "py39"
-  ],
-  "python.formatting.blackPath": "/Users/junsen/miniconda3/envs/py-test/bin/black",
-  "python.linting.flake8Enabled": true,
-  "python.linting.enabled": true,
-  "python.linting.flake8Args": [
-    "--max-line-length=88",
-    "--extend-ignore=E203,W503,E501"
-  ],
-  "python.sortImports.args": [
-    "--profile=black",
-    "--line-length=88"
-  ],
   "[python]": {
-    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.defaultFormatter": "charliermarsh.ruff",
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "explicit"
@@ -31,6 +16,5 @@
   },
   "autoDocstring.docstringFormat": "google",
   "python.analysis.autoImportCompletions": true,
-  "python.linting.pylintEnabled": false,
-  "python.linting.mypyEnabled": false
+  "commentTranslate.source": "Bing"
 }

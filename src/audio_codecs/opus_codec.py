@@ -116,12 +116,12 @@ class OpusCodec:
             self.decoder = opuslib.Decoder(self.output_sample_rate, self.channels)
 
             logger.info(
-                f"Opus编解码器创建成功 (float32模式) | "
-                f"编码: {self.input_sample_rate}Hz | "
-                f"解码: {self.output_sample_rate}Hz"
+                f"Opus codec tạo thành công (chế độ float32) | "
+                f"Mã hóa: {self.input_sample_rate}Hz | "
+                f"Giải mã: {self.output_sample_rate}Hz"
             )
         except Exception as e:
-            logger.error(f"创建Opus编解码器失败: {e}", exc_info=True)
+            logger.error(f"Tạo Opus codec thất bại: {e}", exc_info=True)
             raise
 
     def encode(self, pcm_float32: np.ndarray, frame_size: int) -> bytes:
@@ -190,4 +190,4 @@ class OpusCodec:
             decoder_api.destroy(self.decoder.decoder_state)
             self.decoder.decoder_state = None  # 防止 __del__ 二次释放
             self.decoder = None
-        logger.debug("Opus编解码器已释放")
+        logger.debug("Opus codec đã được giải phóng")

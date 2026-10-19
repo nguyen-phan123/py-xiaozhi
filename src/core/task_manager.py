@@ -1,10 +1,11 @@
-"""任务管理器.
+"""Quản lý tác vụ (TaskManager).
 
-统一管理异步任务的创建、追踪和清理。
+Quản lý tập trung việc tạo, theo dõi và dọn dẹp các asynchronous task.
 """
 
 import asyncio
-from typing import Any, Awaitable, Callable, Optional
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from src.logging import get_logger
 
@@ -12,80 +13,80 @@ logger = get_logger()
 
 
 class TaskManager:
-    """异步任务管理器.
+    """Bộ quản lý tác vụ bất đồng bộ.
 
-    职责:
-    - 创建和追踪异步任务
-    - 关闭时统一取消所有任务
-    - 提供线程安全的任务调度
+    Trách nhiệm:
+    - Tạo và theo dõi các asynchronous task
+    - Hủy đồng loạt tất cả task khi đóng ứng dụng
+    - Cung cấp cơ chế lập lịch tác vụ an toàn theo luồng (thread-safe)
 
-    用法:
+    Cách dùng:
         tm = TaskManager()
         tm.set_loop(asyncio.get_running_loop())
 
-        # 创建任务
+        # Tạo task
         task = tm.spawn(some_coroutine(), "task_name")
 
-        # 线程安全调度
+        # Lập lịch an toàn theo luồng
         tm.schedule_nowait(some_function, arg1, arg2)
 
-        # 关闭时清理
+        # Dọn dẹp khi tắt
         await tm.cancel_all()
     """
 
     def __init__(self):
         self._tasks: set[asyncio.Task] = set()
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._shutdown_event: Optional[asyncio.Event] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._shutdown_event: asyncio.Event | None = None
         self._running: bool = False
 
-    def initialize(self, loop: asyncio.AbstractEventLoop = None) -> None:
-        """初始化任务管理器.
+    def initialize(self, loop: asyncio.AbstractEventLoop | None = None) -> None:
+        """Khởi tạo bộ quản lý tác vụ.
 
         Args:
-            loop: 事件循环，为 None 时使用当前运行的循环
+            loop: Event loop, nếu là None sẽ dùng loop đang chạy hiện tại
         """
         self._loop = loop or asyncio.get_running_loop()
         self._shutdown_event = asyncio.Event()
         self._running = True
-        logger.debug("TaskManager 已初始化")
+        logger.debug("TaskManager đã được khởi tạo")
 
     @property
-    def loop(self) -> Optional[asyncio.AbstractEventLoop]:
+    def loop(self) -> asyncio.AbstractEventLoop | None:
         """
-        获取事件循环.
+        Lấy event loop.
         """
         return self._loop
 
     @property
     def running(self) -> bool:
         """
-        是否正在运行.
+        Kiểm tra xem có đang chạy hay không.
         """
         return self._running
 
     @property
-    def shutdown_event(self) -> Optional[asyncio.Event]:
+    def shutdown_event(self) -> asyncio.Event | None:
         """
-        获取关闭事件.
+        Lấy sự kiện đóng (shutdown event).
         """
         return self._shutdown_event
 
-    def spawn(self, coro: Awaitable[Any], name: str) -> Optional[asyncio.Task]:
-        """创建异步任务并追踪.
+    def spawn(self, coro: Awaitable[Any], name: str) -> asyncio.Task | None:
+        """Tạo task bất đồng bộ và theo dõi.
 
         Args:
-            coro: 协程对象
-            name: 任务名称
+            coro: Đối tượng coroutine
+            name: Tên task
 
         Returns:
-            创建的任务对象，如果应用正在关闭则返回 None
+            Đối tượng task được tạo, trả về None nếu ứng dụng đang đóng
         """
-        # 检查是否正在关闭
+        # Kiểm tra xem có đang đóng hay không
         if not self._running or (
             self._shutdown_event and self._shutdown_event.is_set()
         ):
-            logger.debug(f"跳过任务创建（应用正在关闭）: {name}")
+            logger.debug(f"Bỏ qua tạo tác vụ (ứng dụng đang đóng): {name}")
             return None
 
         task = asyncio.create_task(coro, name=name)
@@ -96,30 +97,32 @@ class TaskManager:
             if not t.cancelled():
                 exc = t.exception()
                 if exc:
-                    # done callback 无 active exception context，必须传 exc 本体
-                    logger.error(f"任务 {name} 异常结束: {exc}", exc_info=exc)
+                    # done callback không có active exception context, bắt buộc phải truyền exc instance
+                    logger.error(
+                        f"Tác vụ {name} kết thúc bất thường: {exc}", exc_info=exc
+                    )
 
         task.add_done_callback(_on_done)
         return task
 
     def schedule_nowait(self, fn: Callable, *args, **kwargs) -> None:
-        """线程安全地调度可调用对象.
+        """Lập lịch callable một cách an toàn theo luồng (thread-safe).
 
-        如果可调用对象返回协程，会自动创建任务。
+        Nếu callable trả về một coroutine, task sẽ được tự động tạo.
 
         Args:
-            fn: 可调用对象
-            *args: 位置参数
-            **kwargs: 关键字参数
+            fn: Đối tượng callable
+            *args: Tham số vị trí
+            **kwargs: Tham số từ khóa
         """
-        # 检查是否正在关闭 - 静默拒绝
+        # Kiểm tra xem có đang đóng hay không - từ chối trong im lặng
         if not self._running or (
             self._shutdown_event and self._shutdown_event.is_set()
         ):
             return
 
         if not self._loop or self._loop.is_closed():
-            # 关闭时静默跳过，不打印警告
+            # Bỏ qua trong im lặng khi đang đóng, không in cảnh báo
             return
 
         def _runner():
@@ -132,29 +135,31 @@ class TaskManager:
                     if task is None:
                         result.close()
             except Exception as e:
-                logger.error(f"调度的可调用执行失败: {e}", exc_info=True)
+                logger.error(
+                    f"Thực thi callable được lập lịch thất bại: {e}", exc_info=True
+                )
 
         self._loop.call_soon_threadsafe(_runner)
 
     async def wait_shutdown(self) -> None:
         """
-        等待关闭信号.
+        Chờ tín hiệu đóng.
         """
         if self._shutdown_event:
             await self._shutdown_event.wait()
 
     def request_shutdown(self) -> None:
         """
-        请求关闭.
+        Yêu cầu đóng.
         """
         if self._shutdown_event and not self._shutdown_event.is_set():
             self._shutdown_event.set()
-            logger.info("收到关闭请求")
+            logger.info("Nhận được yêu cầu đóng")
 
     async def cancel_all(self) -> None:
-        """取消所有追踪的任务.
+        """Hủy tất cả task đang theo dõi.
 
-        会等待所有任务完成或取消。
+        Sẽ chờ tất cả task hoàn thành hoặc bị hủy.
         """
         self._running = False
 
@@ -164,28 +169,28 @@ class TaskManager:
         if not self._tasks:
             return
 
-        logger.info(f"正在取消 {len(self._tasks)} 个任务...")
+        logger.info(f"Đang hủy {len(self._tasks)} tác vụ...")
 
-        # 取消所有任务
+        # Hủy tất cả task
         for task in list(self._tasks):
             if not task.done():
                 task.cancel()
 
-        # 等待所有任务完成
+        # Chờ tất cả task hoàn thành
         if self._tasks:
             await asyncio.gather(*self._tasks, return_exceptions=True)
             self._tasks.clear()
 
-        logger.info("所有任务已取消")
+        logger.info("Tất cả tác vụ đã được hủy")
 
     def task_count(self) -> int:
         """
-        获取当前任务数量.
+        Lấy số lượng task hiện tại.
         """
         return len(self._tasks)
 
     def get_task_names(self) -> list[str]:
         """
-        获取所有任务名称.
+        Lấy danh sách tên của tất cả task.
         """
         return [t.get_name() for t in self._tasks if not t.done()]

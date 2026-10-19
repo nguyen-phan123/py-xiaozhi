@@ -12,7 +12,7 @@ logger = get_logger()
 
 def get_weather_payload(args: dict[str, Any]) -> str:
     city = args.get("city", "北京")
-    logger.info(f"[WeatherTool] 获取 {city} 的当前天气")
+    logger.info(f"[WeatherTool] Lấy thời tiết hiện tại của {city}")
     # TODO: 实际项目中应调用天气API
     weather_data = {
         "city": city,
@@ -28,7 +28,7 @@ def get_weather_payload(args: dict[str, Any]) -> str:
 def get_forecast_payload(args: dict[str, Any]) -> str:
     city = args.get("city", "北京")
     days = args.get("days", 3)
-    logger.info(f"[WeatherTool] 获取 {city} 的 {days} 天天气预报")
+    logger.info(f"[WeatherTool] Lấy dự báo thời tiết {days} ngày của {city}")
     forecast = [
         {"date": "今天", "high": 28, "low": 18, "condition": "晴"},
         {"date": "明天", "high": 26, "low": 17, "condition": "多云"},

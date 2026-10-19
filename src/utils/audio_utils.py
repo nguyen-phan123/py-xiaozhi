@@ -234,22 +234,22 @@ def refresh_portaudio_devices(*, reinitialize: bool = True) -> list[dict]:
             try:
                 terminate()
                 initialize()
-                logger.info("PortAudio 已重新初始化，准备重新枚举设备")
+                logger.info("PortAudio đã được tái khởi tạo, chuẩn bị liệt kê lại thiết bị")
             except Exception as e:
                 logger.warning(
-                    f"PortAudio 重初始化失败，降级为普通枚举: {e}",
+                    f"Tái khởi tạo PortAudio thất bại, chuyển sang liệt kê thông thường: {e}",
                     exc_info=True,
                 )
         else:
-            logger.debug("当前 sounddevice 无 _terminate/_initialize，跳过重初始化")
+            logger.debug("sounddevice hiện tại không có _terminate/_initialize, bỏ qua tái khởi tạo")
 
     try:
         devices = list(sd.query_devices())
     except Exception as e:
-        logger.error(f"query_devices 失败: {e}", exc_info=True)
+        logger.error(f"query_devices thất bại: {e}", exc_info=True)
         return []
 
-    logger.info(f"音频设备枚举完成: {len(devices)} 个")
+    logger.info(f"Liệt kê thiết bị âm thanh hoàn tất: {len(devices)} thiết bị")
     return devices
 
 
@@ -267,7 +267,7 @@ def list_audio_devices(
     try:
         devices = list(sd.query_devices())
     except Exception as e:
-        logger.error(f"列出音频设备失败: {e}", exc_info=True)
+        logger.error(f"Liệt kê thiết bị âm thanh thất bại: {e}", exc_info=True)
         return {"input": [], "output": []}
 
     default_input = None
@@ -421,7 +421,7 @@ def select_audio_device(
         if packed:
             return packed
     except Exception:
-        logger.debug(f"查询系统默认{kind}设备失败，尝试兜底策略")
+        logger.debug(f"Truy vấn thiết bị {kind} mặc định của hệ thống thất bại, thử chiến lược dự phòng")
 
     # 2. 兜底：第一个可用的非虚拟设备
     for i, _d in enumerate(devices):

@@ -72,14 +72,14 @@ class AudioStreamManager:
                 )
 
             logger.info(
-                f"音频流已创建 | "
-                f"输入: {self.device_config.input_sample_rate}Hz "
+                f"Luồng âm thanh đã tạo | "
+                f"Đầu vào: {self.device_config.input_sample_rate}Hz "
                 f"{self.device_config.input_channels}ch | "
-                f"输出: {self.device_config.output_sample_rate}Hz "
+                f"Đầu ra: {self.device_config.output_sample_rate}Hz "
                 f"{self.device_config.output_channels}ch"
             )
         except Exception as e:
-            logger.error(f"创建音频流失败: {e}", exc_info=True)
+            logger.error(f"Tạo luồng âm thanh thất bại: {e}", exc_info=True)
             raise
 
     def start(self) -> None:
@@ -93,9 +93,9 @@ class AudioStreamManager:
                 self.input_stream.start()
             if self.output_stream:
                 self.output_stream.start()
-            logger.info("音频流已启动")
+            logger.info("Luồng âm thanh đã khởi động")
         except Exception as e:
-            logger.error(f"启动音频流失败: {e}", exc_info=True)
+            logger.error(f"Khởi động luồng âm thanh thất bại: {e}", exc_info=True)
             raise
 
     def stop(self) -> None:
@@ -115,9 +115,9 @@ class AudioStreamManager:
                 self.output_stream.close()
                 self.output_stream = None
 
-            logger.info("音频流已停止")
+            logger.info("Luồng âm thanh đã dừng")
         except Exception as e:
-            logger.error(f"停止音频流失败: {e}", exc_info=True)
+            logger.error(f"Dừng luồng âm thanh thất bại: {e}", exc_info=True)
 
     def is_active(self) -> bool:
         """是否仍持有未关闭的输入/输出流."""
@@ -158,7 +158,7 @@ class AudioStreamManager:
                         latency="low",
                     )
                     self.input_stream.start()
-                    logger.info("输入流重新初始化成功")
+                    logger.info("Khởi tạo lại luồng đầu vào thành công")
                     return True
 
                 elif not is_input and output_callback:
@@ -177,12 +177,12 @@ class AudioStreamManager:
                         latency="low",
                     )
                     self.output_stream.start()
-                    logger.info("输出流重新初始化成功")
+                    logger.info("Khởi tạo lại luồng đầu ra thành công")
                     return True
 
             return False
 
         except Exception as e:
             stream_type = "输入" if is_input else "输出"
-            logger.error(f"{stream_type}流重建失败: {e}", exc_info=True)
+            logger.error(f"Tái tạo luồng {stream_type} thất bại: {e}", exc_info=True)
             return False

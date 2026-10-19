@@ -39,14 +39,14 @@ class GuiViewManager(QObject):
         self._tray_service: TrayService | None = None
 
         self._event_bus.on(Events.UI_TOGGLE_WINDOW, self._on_toggle_window)
-        logger.debug("GuiViewManager: 已订阅窗口切换事件")
+        logger.debug("GuiViewManager: Đã đăng ký sự kiện chuyển đổi cửa sổ")
 
     async def start(self, mode: str = "gui"):
         if mode == "cli":
-            logger.info("GuiViewManager: CLI 模式，跳过 GUI 初始化")
+            logger.info("GuiViewManager: Chế độ CLI, bỏ qua khởi tạo GUI")
             return
 
-        logger.info("GuiViewManager: 启动 GUI...")
+        logger.info("GuiViewManager: Đang khởi động GUI...")
         self._running = True
 
         self._host.create_engine()
@@ -63,15 +63,15 @@ class GuiViewManager(QObject):
         self._host.show_root(activate=False)
         self._setup_tray()
         self._main.set_neutral_emotion()
-        logger.info("GuiViewManager: GUI 启动完成")
+        logger.info("GuiViewManager: GUI khởi động hoàn tất")
 
     async def close(self):
-        logger.info("GuiViewManager: 正在关闭...")
+        logger.info("GuiViewManager: Đang đóng...")
         self._running = False
         if self._tray_service:
             self._tray_service.hide()
         self._host.shutdown()
-        logger.info("GuiViewManager: 已关闭")
+        logger.info("GuiViewManager: Đã đóng")
 
     def _setup_tray(self) -> None:
         root = self._host.root_window()
@@ -89,7 +89,7 @@ class GuiViewManager(QObject):
         )
 
     async def _on_toggle_window(self, data=None):
-        logger.debug("GuiViewManager: 收到窗口切换事件")
+        logger.debug("GuiViewManager: Nhận sự kiện chuyển đổi cửa sổ")
         self.toggle_window()
 
     # ----- ViewPort -----
@@ -141,6 +141,6 @@ class GuiViewManager(QObject):
 
     def open_settings(self):
         if not self._host.engine:
-            logger.warning("GuiViewManager: 引擎未初始化，无法打开设置")
+            logger.warning("GuiViewManager: Engine chưa khởi tạo, không thể mở cài đặt")
             return
         self._settings.open_settings()

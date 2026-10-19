@@ -41,7 +41,7 @@ class AudioConverter:
         self.needs_input_downmix = from_channels > to_channels
 
         if self.needs_input_downmix:
-            logger.info(f"输入声道下混: {from_channels}ch → {to_channels}ch")
+            logger.info(f"Downmix kênh đầu vào: {from_channels}ch → {to_channels}ch")
 
         if from_rate != to_rate:
             self.input_resampler = soxr.ResampleStream(
@@ -51,7 +51,7 @@ class AudioConverter:
                 dtype="float32",
                 quality="QQ",  # 快速质量（适合实时处理）
             )
-            logger.info(f"输入重采样: {from_rate}Hz → {to_rate}Hz")
+            logger.info(f"Resample đầu vào: {from_rate}Hz → {to_rate}Hz")
 
     def setup_output_converter(
         self, from_rate: int, to_rate: int, from_channels: int = 1, to_channels: int = 2
@@ -75,10 +75,10 @@ class AudioConverter:
                 dtype="float32",
                 quality="QQ",
             )
-            logger.info(f"输出重采样: {from_rate}Hz → {to_rate}Hz")
+            logger.info(f"Resample đầu ra: {from_rate}Hz → {to_rate}Hz")
 
         if self.needs_output_upmix:
-            logger.info(f"输出声道上混: {from_channels}ch → {to_channels}ch")
+            logger.info(f"Upmix kênh đầu ra: {from_channels}ch → {to_channels}ch")
 
     def convert_input(
         self, audio: np.ndarray, target_size: int
@@ -174,7 +174,7 @@ class AudioConverter:
         """清空缓冲区"""
         self._input_buffer.clear()
         self._output_buffer.clear()
-        logger.debug("音频转换器缓冲区已清空")
+        logger.debug("Bộ đệm chuyển đổi âm thanh đã được xóa")
 
     def close(self):
         """释放 soxr 重采样器，防止 nanobind C++ 对象泄漏."""

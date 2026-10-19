@@ -24,7 +24,7 @@ class TrayService(QObject):
         self._enabled = os.getenv("XIAOZHI_DISABLE_TRAY") != "1"
 
         if not self._enabled:
-            logger.warning("系统托盘已通过环境变量禁用")
+            logger.warning("Khay hệ thống đã bị vô hiệu hóa qua biến môi trường")
 
     def setup(
         self,
@@ -44,7 +44,7 @@ class TrayService(QObject):
             return False
 
         if not QSystemTrayIcon.isSystemTrayAvailable():
-            logger.warning("系统托盘不可用")
+            logger.warning("Khay hệ thống không khả dụng")
             return False
 
         try:
@@ -63,9 +63,9 @@ class TrayService(QObject):
 
             # 创建菜单
             self._menu = QMenu()
-            self._menu.addAction("显示窗口", on_show)
+            self._menu.addAction("Hiển thị cửa sổ", on_show)
             self._menu.addSeparator()
-            self._menu.addAction("退出", on_quit)
+            self._menu.addAction("Thoát", on_quit)
 
             self._tray.setContextMenu(self._menu)
 
@@ -75,11 +75,11 @@ class TrayService(QObject):
             )
 
             self._tray.show()
-            logger.info("系统托盘初始化成功")
+            logger.info("Khởi tạo khay hệ thống thành công")
             return True
 
         except Exception as e:
-            logger.error(f"系统托盘初始化失败: {e}", exc_info=True)
+            logger.error(f"Khởi tạo khay hệ thống thất bại: {e}", exc_info=True)
             return False
 
     def update_tooltip(self, text: str):

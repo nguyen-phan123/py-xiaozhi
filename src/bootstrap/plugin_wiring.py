@@ -1,6 +1,6 @@
-"""插件与共享服务装配.
+"""Lắp ráp plugin và dịch vụ dùng chung (Plugin & Shared Services Wiring).
 
-集中：创建 McpServer/MusicPlayer、注册插件清单、资源池清理、音频直连。
+Tập trung: khởi tạo McpServer/MusicPlayer, đăng ký danh sách plugin, dọn dẹp resource pool, kênh truyền trực tiếp âm thanh.
 """
 
 from __future__ import annotations
@@ -17,9 +17,9 @@ logger = get_logger()
 
 
 def bind_shared_services(container: "ServiceContainer") -> None:
-    """创建跨插件共享服务（McpServer / MusicPlayer），仅容器持有.
+    """Tạo các dịch vụ dùng chung giữa các plugin (McpServer / MusicPlayer), chỉ do container nắm giữ.
 
-    不再写入模块级单例；插件与 MCP 工具经构造注入 / 闭包拿到同一实例。
+    Không ghi vào singleton cấp module; plugin và MCP tool nhận cùng một instance qua dependency injection / closure.
     """
     from src.mcp.mcp_server import McpServer
     from src.mcp.tools.music.music_player import MusicPlayer
@@ -30,21 +30,21 @@ def bind_shared_services(container: "ServiceContainer") -> None:
     if container.music_player is None:
         container.music_player = MusicPlayer()
 
-    logger.debug("共享服务已创建: McpServer, MusicPlayer")
+    logger.debug("Dịch vụ dùng chung đã được tạo: McpServer, MusicPlayer")
 
 
 def unbind_shared_services(container: "ServiceContainer") -> None:
-    """释放共享服务引用（资源池最后阶段调用）."""
+    """Giải phóng tham chiếu dịch vụ dùng chung (được gọi ở giai đoạn cuối của resource pool)."""
     if container.music_player is not None:
         try:
             container.music_player.detach()
         except Exception as e:
-            logger.debug(f"detach MusicPlayer 失败: {e}", exc_info=True)
+            logger.debug(f"detach MusicPlayer thất bại: {e}", exc_info=True)
     if container.mcp_server is not None:
         try:
             container.mcp_server.detach()
         except Exception as e:
-            logger.debug(f"detach McpServer 失败: {e}", exc_info=True)
+            logger.debug(f"detach McpServer thất bại: {e}", exc_info=True)
     container.music_player = None
     container.mcp_server = None
 
@@ -55,7 +55,7 @@ async def setup_plugins(
     ctx: "PluginContext",
     cmd: "PluginCommands",
 ) -> None:
-    """绑定共享服务、注册并初始化插件、挂资源清理与音频直连."""
+    """Ràng buộc dịch vụ dùng chung, đăng ký và khởi tạo plugin, gắn dọn dẹp tài nguyên và kết nối trực tiếp âm thanh."""
     from src.plugins.audio import AudioPlugin
     from src.plugins.mcp import McpPlugin
     from src.plugins.shortcuts import ShortcutsPlugin
@@ -64,7 +64,7 @@ async def setup_plugins(
 
     bind_shared_services(container)
 
-    # 创建插件实例（Audio 经事件发布 codec，不注入 MusicPlayer）
+    # Tạo instance các plugin (Audio công bố codec qua event, không inject MusicPlayer)
     audio_plugin = AudioPlugin()
     wake_word_plugin = WakeWordPlugin()
     ui_plugin = UIPlugin(mode=mode, task_manager=container.tasks)
@@ -86,29 +86,29 @@ async def setup_plugins(
 
     register_cleanup_resources(container)
 
-    # 设置音频直连通道（TTS 音频不经过 EventBus，减少延迟）
+    # Thiết lập kênh truyền trực tiếp âm thanh (âm thanh TTS không qua EventBus để giảm độ trễ)
     if not audio_plugin.failed:
         container.protocol.set_audio_handler(audio_plugin.on_incoming_audio)
 
 
 def register_cleanup_resources(container: "ServiceContainer") -> None:
-    """将所有模块的清理函数注册到资源池（先注册的后释放）."""
+    """Đăng ký hàm dọn dẹp của tất cả các module vào resource pool (đăng ký trước giải phóng sau)."""
     pool = container.resource_pool
 
-    # 最先注册 = 最后释放：共享服务 unbind 在插件清理之后
+    # Đăng ký đầu tiên = giải phóng cuối cùng: unbind dịch vụ dùng chung sau khi dọn dẹp plugin
     pool.register(
         "shared_services", lambda: unbind_shared_services(container)
     )
 
-    # 事件总线最后释放（次先注册）
+    # Giải phóng EventBus cuối cùng (đăng ký thứ hai)
     pool.register("event_bus", container.event_bus.clear)
 
-    # 各插件注册自身资源
+    # Mỗi plugin tự đăng ký tài nguyên của mình
     for plugin in container.plugins._plugins:
         plugin.register_resources(pool)
 
-    # 网络连接
+    # Kết nối mạng
     pool.register("protocol", container.protocol.disconnect)
 
-    # 异步任务
+    # Tác vụ bất đồng bộ
     pool.register("tasks", container.tasks.cancel_all)

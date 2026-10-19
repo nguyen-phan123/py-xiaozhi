@@ -55,7 +55,7 @@ class GPIOInput:
 
         # 检查平台
         if sys.platform != "linux":
-            logger.warning("GPIO 模式仅支持 Linux 系统")
+            logger.warning("Chế độ GPIO chỉ hỗ trợ hệ điều hành Linux")
             return
 
         # 尝试导入 gpiozero
@@ -64,13 +64,13 @@ class GPIOInput:
 
             self._Button = Button
             self._available = True
-            logger.info(f"GPIO 输入初始化成功，引脚: {self._pins}")
+            logger.info(f"Khởi tạo đầu vào GPIO thành công, chân: {self._pins}")
         except ImportError:
             logger.error(
-                "未安装 gpiozero 库，请运行: sudo apt install python3-gpiozero python3-rpi.gpio"
+                "Chưa cài đặt thư viện gpiozero, vui lòng chạy: sudo apt install python3-gpiozero python3-rpi.gpio"
             )
         except Exception as e:
-            logger.error(f"GPIO 初始化失败: {e}", exc_info=True)
+            logger.error(f"Khởi tạo GPIO thất bại: {e}", exc_info=True)
 
     @property
     def available(self) -> bool:
@@ -101,7 +101,7 @@ class GPIOInput:
             是否设置成功
         """
         if not self._available:
-            logger.warning("GPIO 不可用，跳过按键设置")
+            logger.warning("GPIO không khả dụng, bỏ qua thiết lập phím bấm")
             return False
 
         callbacks = [on_key1_pressed, on_key2_pressed, on_key3_pressed, on_key4_pressed]
@@ -133,13 +133,13 @@ class GPIOInput:
 
                     button.when_pressed = make_handler(i)
 
-                logger.debug(f"KEY{i + 1} -> GPIO{pin} 已配置")
+                logger.debug(f"KEY{i + 1} -> GPIO{pin} đã cấu hình")
 
-            logger.info(f"GPIO 按键设置完成: {len(self._buttons)} 个按键")
+            logger.info(f"Thiết lập phím bấm GPIO hoàn tất: {len(self._buttons)} phím")
             return True
 
         except Exception as e:
-            logger.error(f"GPIO 按键设置失败: {e}", exc_info=True)
+            logger.error(f"Thiết lập phím bấm GPIO thất bại: {e}", exc_info=True)
             return False
 
     def close(self) -> None:
@@ -148,9 +148,9 @@ class GPIOInput:
             try:
                 button.close()
             except Exception as e:
-                logger.warning(f"关闭 GPIO 按钮失败: {e}", exc_info=True)
+                logger.warning(f"Đóng nút GPIO thất bại: {e}", exc_info=True)
 
         self._buttons.clear()
         with self._lock:
             self._callbacks.clear()
-        logger.info("GPIO 资源已释放")
+        logger.info("Tài nguyên GPIO đã được giải phóng")

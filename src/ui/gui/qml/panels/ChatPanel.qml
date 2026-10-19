@@ -27,7 +27,7 @@ Rectangle {
 
                 Text {
                     width: parent.width
-                    text: mainModel.ttsText || "等待对话..."
+                    text: mainModel.ttsText || "Chờ hội thoại..."
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMd
                     color: mainModel.ttsText ? Theme.textPrimary : Theme.textPlaceholder

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""统一激活服务门面：组合 identity / ota / client / side_effects."""
+"""Façade dịch vụ kích hoạt thống nhất: Kết hợp identity / ota / client / side_effects."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ logger = get_logger()
 
 
 class ActivationResult(TypedDict, total=False):
-    """激活结果类型."""
+    """Kiểu kết quả kích hoạt."""
 
     success: bool
     need_activation_ui: bool
@@ -30,7 +30,7 @@ class ActivationResult(TypedDict, total=False):
 
 
 class ActivationService:
-    """设备激活门面（由 create() 构造，非单例）."""
+    """Façade kích hoạt thiết bị (được khởi tạo qua create(), không phải singleton)."""
 
     def __init__(self) -> None:
         self.logger = get_logger()
@@ -63,20 +63,20 @@ class ActivationService:
         self._identity.ensure_efuse_file()
         await self._ota.ensure_local_ip()
         self._initialized = True
-        self.logger.info("ActivationService 初始化完成")
+        self.logger.info("Khởi tạo ActivationService hoàn tất")
 
-    # ---------- 公共接口 ----------
+    # ---------- Public interface ----------
 
     async def initialize(self) -> ActivationResult:
-        self.logger.info("开始系统初始化流程")
+        self.logger.info("Bắt đầu quy trình khởi tạo hệ thống")
         try:
             serial_number, hmac_key, is_activated = (
                 self._identity.ensure_device_identity()
             )
             self._activation_status["local_activated"] = is_activated
-            self.logger.info(f"设备序列号: {serial_number}")
+            self.logger.info(f"Số serial thiết bị: {serial_number}")
             self.logger.info(
-                f"本地激活状态: {'已激活' if is_activated else '未激活'}"
+                f"Trạng thái kích hoạt cục bộ: {'Đã kích hoạt' if is_activated else 'Chưa kích hoạt'}"
             )
 
             self._ota.initialize_config()
@@ -87,14 +87,14 @@ class ActivationService:
             activation_version = self.config_manager.get_config(
                 "SYSTEM_OPTIONS.NETWORK.ACTIVATION_VERSION", "v1"
             )
-            self.logger.info(f"激活版本: {activation_version}")
+            self.logger.info(f"Phiên bản kích hoạt: {activation_version}")
 
             if activation_version == "v1":
-                self.logger.info("v1协议：无需激活流程")
+                self.logger.info("Giao thức v1: không cần quy trình kích hoạt")
                 return ActivationResult(
                     success=True,
                     need_activation_ui=False,
-                    message="v1协议初始化完成",
+                    message="Khởi tạo giao thức v1 hoàn tất",
                     local_activated=True,
                     server_activated=True,
                     status_consistent=True,
@@ -106,25 +106,25 @@ class ActivationService:
             return result
         except Exception as e:
             self.logger.error(
-                f"系统初始化失败: {type(e).__name__}: {e}", exc_info=True
+                f"Khởi tạo hệ thống thất bại: {type(e).__name__}: {e}", exc_info=True
             )
             return ActivationResult(
                 success=False,
                 need_activation_ui=False,
-                message="初始化失败",
+                message="Khởi tạo thất bại",
                 error=str(e),
             )
 
     async def activate(self, activation_data: Optional[Dict] = None) -> bool:
         data = activation_data or self._activation_data
         if not data:
-            self.logger.error("没有激活数据")
+            self.logger.error("Không có dữ liệu kích hoạt")
             return False
 
         challenge = data.get("challenge")
         code = data.get("code")
         if not challenge or not code:
-            self.logger.error("激活数据缺少必要字段")
+            self.logger.error("Dữ liệu kích hoạt thiếu các trường bắt buộc")
             return False
 
         try:
@@ -137,7 +137,7 @@ class ActivationService:
                 on_retry_announce=announce_code,
             )
         except asyncio.CancelledError:
-            self.logger.info("激活流程被取消")
+            self.logger.info("Quy trình kích hoạt bị hủy")
             return False
         finally:
             self._is_activating = False
@@ -145,7 +145,7 @@ class ActivationService:
 
     def cancel_activation(self) -> None:
         if self._activation_task and not self._activation_task.done():
-            self.logger.info("正在取消激活任务")
+            self.logger.info("Đang hủy tác vụ kích hoạt")
             self._activation_task.cancel()
 
     def get_device_info(self) -> Dict:
@@ -181,13 +181,13 @@ class ActivationService:
         server = self._activation_status["server_activated"]
         consistent = local == server
         self._activation_status["status_consistent"] = consistent
-        self.logger.info(f"激活状态分析: 本地={local}, 服务器={server}")
+        self.logger.info(f"Phân tích trạng thái kích hoạt: Cục bộ={local}, Máy chủ={server}")
 
         if not local and not server:
             return ActivationResult(
                 success=True,
                 need_activation_ui=True,
-                message="设备需要激活",
+                message="Thiết bị cần kích hoạt",
                 local_activated=local,
                 server_activated=server,
                 status_consistent=consistent,
@@ -196,29 +196,29 @@ class ActivationService:
             return ActivationResult(
                 success=True,
                 need_activation_ui=False,
-                message="设备已激活",
+                message="Thiết bị đã được kích hoạt",
                 local_activated=local,
                 server_activated=server,
                 status_consistent=consistent,
             )
         if not local and server:
-            self.logger.warning("自动修复本地激活状态")
+            self.logger.warning("Tự động sửa trạng thái kích hoạt cục bộ")
             self._identity.set_activation_status(True)
             return ActivationResult(
                 success=True,
                 need_activation_ui=False,
-                message="已自动修复激活状态",
+                message="Đã tự động sửa trạng thái kích hoạt",
                 local_activated=True,
                 server_activated=server,
                 status_consistent=True,
             )
 
-        self.logger.warning("服务器取消授权，需要重新激活")
+        self.logger.warning("Máy chủ đã thu hồi ủy quyền, cần kích hoạt lại")
         if self._activation_data and "code" in self._activation_data:
             return ActivationResult(
                 success=True,
                 need_activation_ui=True,
-                message="服务器取消授权，需要重新激活",
+                message="Máy chủ hủy ủy quyền, cần kích hoạt lại",
                 local_activated=local,
                 server_activated=server,
                 status_consistent=consistent,
@@ -226,7 +226,7 @@ class ActivationService:
         return ActivationResult(
             success=True,
             need_activation_ui=False,
-            message="保持本地激活状态",
+            message="Giữ trạng thái kích hoạt cục bộ",
             local_activated=local,
             server_activated=True,
             status_consistent=True,

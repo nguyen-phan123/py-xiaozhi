@@ -30,9 +30,9 @@ class MusicCache:
             self.root.mkdir(parents=True, exist_ok=True)
             self.temp_dir.mkdir(parents=True, exist_ok=True)
             self._ready = True
-            logger.debug(f"音乐缓存目录就绪: {self.root}")
+            logger.debug(f"Thư mục cache nhạc đã sẵn sàng: {self.root}")
         except Exception as e:
-            logger.error(f"创建缓存目录失败: {e}", exc_info=True)
+            logger.error(f"Tạo thư mục cache thất bại: {e}", exc_info=True)
             self.root = Path(tempfile.gettempdir()) / "xiaozhi_music_cache"
             self.temp_dir = self.root / "temp"
             self.root.mkdir(parents=True, exist_ok=True)
@@ -89,12 +89,12 @@ class MusicCache:
                 try:
                     if file_path.is_file():
                         file_path.unlink()
-                        logger.debug(f"已删除临时缓存文件: {file_path.name}")
+                        logger.debug(f"Đã xóa tệp cache tạm thời: {file_path.name}")
                 except Exception as e:
                     logger.warning(
-                        f"删除临时缓存文件失败: {file_path.name}, {e}",
+                        f"Xóa tệp cache tạm thời thất bại: {file_path.name}, {e}",
                         exc_info=True,
                     )
-            logger.debug("临时音乐缓存清理完成")
+            logger.debug("Dọn dẹp cache nhạc tạm thời hoàn tất")
         except Exception as e:
-            logger.error(f"清理临时缓存目录失败: {e}", exc_info=True)
+            logger.error(f"Dọn dẹp thư mục cache tạm thời thất bại: {e}", exc_info=True)

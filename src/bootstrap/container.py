@@ -1,6 +1,6 @@
-"""服务容器.
+"""Service Container (Bộ chứa dịch vụ).
 
-整合核心服务，作为应用的中央协调者；会话/门闩/装配/适配器已拆到子模块。
+Tích hợp các dịch vụ cốt lõi, đóng vai trò điều phối trung tâm của ứng dụng; session/health check/wiring/adapters đã được tách thành các sub-module.
 """
 
 from src.bootstrap.adapters import PluginCommandsAdapter, PluginContextAdapter
@@ -25,14 +25,14 @@ logger = get_logger()
 
 
 class ServiceContainer:
-    """服务容器.
+    """Service Container (Bộ chứa dịch vụ).
 
-    持有核心服务与 ConversationSession，编排 run / shutdown 生命周期。
-    会话操作走 ``self.session``；门闩走 ``health`` 模块。
+    Nắm giữ các dịch vụ cốt lõi và ConversationSession, điều phối vòng đời run / shutdown.
+    Các thao tác hội thoại đi qua ``self.session``; kiểm tra sức khỏe đi qua module ``health``.
     """
 
     def __init__(self):
-        logger.debug("初始化 ServiceContainer")
+        logger.debug("Khởi tạo ServiceContainer")
 
         self.config = get_config()
 
@@ -44,16 +44,16 @@ class ServiceContainer:
         self.event_bus = EventBus()
         self.state = StateManager(self.event_bus, aec_enabled=aec_enabled)
         self.tasks = TaskManager()
-        # Protocol 入站任务走 TaskManager，避免 fire-and-forget
+        # Protocol incoming tasks chạy qua TaskManager, tránh fire-and-forget
         self.protocol = ProtocolManager(self.event_bus, task_manager=self.tasks)
         self.plugins = PluginManager()
         self.resource_pool = ResourcePool()
 
-        # 容器持有的跨插件共享服务（启动时 bind，关闭时 unbind）
+        # Các dịch vụ dùng chung giữa các plugin do container nắm giữ (bind khi khởi động, unbind khi đóng)
         self.mcp_server = None
         self.music_player = None
 
-        # 会话控制（听/说/打断/TTS 回环）
+        # Điều khiển phiên hội thoại (nghe/nói/ngắt lời/TTS loop)
         self.session = ConversationSession(
             state=self.state,
             protocol=self.protocol,
@@ -66,11 +66,11 @@ class ServiceContainer:
 
         self._mode: str = "cli"
         self._shutting_down = False
-        # audio 降级运行（XIAOZHI_DEGRADED_AUDIO=1 且 audio failed）
+        # Chạy ở chế độ audio giáng cấp (XIAOZHI_DEGRADED_AUDIO=1 và audio thất bại)
         self._degraded_audio = False
 
     # -------------------------
-    # 适配器创建
+    # Tạo adapter
     # -------------------------
     def create_plugin_context(self) -> PluginContext:
         if not self._plugin_context:
@@ -83,10 +83,10 @@ class ServiceContainer:
         return self._plugin_commands
 
     # -------------------------
-    # 生命周期
+    # Vòng đời
     # -------------------------
     async def run(self, *, protocol: str = "websocket", mode: str = "gui") -> int:
-        logger.info(f"启动 ServiceContainer, protocol={protocol}, mode={mode}")
+        logger.info(f"Khởi động ServiceContainer, protocol={protocol}, mode={mode}")
         self._mode = mode
 
         try:
@@ -102,13 +102,13 @@ class ServiceContainer:
             await setup_plugins(self, mode, ctx, cmd)
             await self.plugins.start_all()
 
-            # 关键插件健康门闩：失败则退出，禁止 silent zombie
+            # Chốt kiểm tra sức khỏe plugin then chốt: thất bại sẽ thoát ngay, cấm chạy silent zombie
             health_error = check_critical_plugins(self.plugins)
             if health_error:
                 logger.error(health_error)
                 return 1
 
-            # audio 失败但允许降级：打横幅/日志，继续跑 UI
+            # Audio thất bại nhưng cho phép giáng cấp: ghi log/banner thông báo, tiếp tục chạy UI
             if self.plugins.is_failed("audio") and not audio_is_fatal():
                 logger.warning(DEGRADED_AUDIO_NOTICE)
                 self._degraded_audio = True
@@ -117,7 +117,7 @@ class ServiceContainer:
                         Events.SYSTEM_NOTICE, DEGRADED_AUDIO_NOTICE
                     )
                 except Exception as e:
-                    logger.debug(f"降级提示事件失败: {e}", exc_info=True)
+                    logger.debug(f"Phát sự kiện thông báo hạ cấp thất bại: {e}", exc_info=True)
 
             await self.plugins.notify_device_state_changed(self.state.device_state)
 
@@ -125,31 +125,31 @@ class ServiceContainer:
             return 0
 
         except Exception as e:
-            logger.error(f"应用运行失败: {e}", exc_info=True)
+            logger.error(f"Chạy ứng dụng thất bại: {e}", exc_info=True)
             return 1
         finally:
             await self.shutdown()
 
     async def shutdown(self) -> None:
-        """关闭应用，统一通过资源池逆序释放所有资源."""
+        """Đóng ứng dụng, giải phóng tập trung tất cả tài nguyên qua resource pool theo thứ tự ngược."""
         if self._shutting_down:
-            logger.debug("ServiceContainer 已在关闭中，跳过")
+            logger.debug("ServiceContainer đang trong quá trình đóng, bỏ qua")
             return
         self._shutting_down = True
-        logger.info("正在关闭 ServiceContainer...")
+        logger.info("Đang đóng ServiceContainer...")
 
         try:
             await self.resource_pool.shutdown()
-            logger.info("ServiceContainer 关闭完成")
+            logger.info("Đóng ServiceContainer hoàn tất")
         except Exception as e:
-            logger.error(f"关闭时出错: {e}", exc_info=True)
+            logger.error(f"Lỗi khi đóng ServiceContainer: {e}", exc_info=True)
         finally:
             if self._mode == "gui":
                 try:
                     from PySide6.QtWidgets import QApplication
 
                     if QApplication.instance():
-                        logger.debug("退出 Qt 应用")
+                        logger.debug("Thoát ứng dụng Qt")
                         QApplication.quit()
                 except Exception as e:
-                    logger.debug(f"退出 Qt 应用时出错: {e}")
+                    logger.debug(f"Lỗi khi thoát ứng dụng Qt: {e}")

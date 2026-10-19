@@ -219,7 +219,7 @@ class AsyncHandler(QueueHandler):
         try:
             self._listener.stop()
         except Exception as e:
-            logging.getLogger(__name__).debug(f"停止日志监听器失败: {e}")
+            logging.getLogger(__name__).debug(f"Dừng listener log thất bại: {e}")
         super().close()
 
     def emit(self, record: logging.LogRecord) -> None:
@@ -229,6 +229,6 @@ class AsyncHandler(QueueHandler):
         try:
             self.enqueue(record)
         except queue.Full:
-            logging.getLogger(__name__).debug("日志队列已满，丢弃一条日志")
+            logging.getLogger(__name__).debug("Hàng đợi log đã đầy, bỏ qua một bản ghi log")
 
 

@@ -66,8 +66,8 @@ class SettingsWakeWordMixin:
             self._wake_word_preview = keyword_line
             self._wake_word_lang = lang
         except Exception as e:
-            logger.error(f"转换唤醒词失败: {e}", exc_info=True)
-            self._wake_word_preview = f"转换失败: {e}"
+            logger.error(f"Chuyển đổi từ đánh thức thất bại: {e}", exc_info=True)
+            self._wake_word_preview = f"Chuyển đổi thất bại: {e}"
 
     def _get_wakeWord(self) -> str:
         return self._wake_word
@@ -92,7 +92,7 @@ class SettingsWakeWordMixin:
             是否保存成功
         """
         if not self._wake_word:
-            self.statusMessage.emit("请输入唤醒词")
+            self.statusMessage.emit("Vui lòng nhập từ đánh thức")
             return False
 
         try:
@@ -114,15 +114,15 @@ class SettingsWakeWordMixin:
             with open(keywords_path, "w", encoding="utf-8") as f:
                 f.write(keyword_line + "\n")
 
-            logger.info(f"唤醒词已保存: {self._wake_word} -> {keywords_path}")
-            self.statusMessage.emit(f"唤醒词已保存 ({lang.upper()})")
+            logger.info(f"Đã lưu từ đánh thức: {self._wake_word} -> {keywords_path}")
+            self.statusMessage.emit(f"Đã lưu từ đánh thức ({lang.upper()})")
 
             # 保存到文件
             self.save()
             return True
 
         except Exception as e:
-            logger.error(f"保存唤醒词失败: {e}", exc_info=True)
-            self.statusMessage.emit(f"保存失败: {e}")
+            logger.error(f"Lưu từ đánh thức thất bại: {e}", exc_info=True)
+            self.statusMessage.emit(f"Lưu thất bại: {e}")
             return False
 

@@ -27,18 +27,18 @@ def scan_installed_applications() -> List[Dict[str, str]]:
 
     # 1. 扫描开始菜单中的主要应用程序（最直接的方法）
     try:
-        logger.info("[WindowsScanner] 开始扫描开始菜单主要应用")
+        logger.info("[WindowsScanner] Bắt đầu quét ứng dụng chính trong Start Menu")
         start_menu_apps = _scan_main_start_menu_apps()
         apps.extend(start_menu_apps)
         logger.info(
-            f"[WindowsScanner] 从开始菜单扫描到 {len(start_menu_apps)} 个主要应用"
+            f"[WindowsScanner] Quét được từ Start Menu {len(start_menu_apps)} ứng dụng chính"
         )
     except Exception as e:
-        logger.warning(f"[WindowsScanner] 开始菜单扫描失败: {e}", exc_info=True)
+        logger.warning(f"[WindowsScanner] Quét Start Menu thất bại: {e}", exc_info=True)
 
     # 2. 扫描注册表中的主要第三方应用（过滤系统组件）
     try:
-        logger.info("[WindowsScanner] 开始扫描已安装的主要应用程序")
+        logger.info("[WindowsScanner] Bắt đầu quét ứng dụng chính đã cài đặt")
         registry_apps = _scan_main_registry_apps()
         # 去重：避免重复添加开始菜单中的应用
         existing_names = {app["display_name"].lower() for app in apps}
@@ -46,10 +46,10 @@ def scan_installed_applications() -> List[Dict[str, str]]:
             if app["display_name"].lower() not in existing_names:
                 apps.append(app)
         logger.info(
-            f"[WindowsScanner] 从注册表扫描到 {len([a for a in registry_apps if a['display_name'].lower() not in existing_names])} 个新的主要应用"
+            f"[WindowsScanner] Quét được từ registry {len([a for a in registry_apps if a['display_name'].lower() not in existing_names])} ứng dụng chính mới"
         )
     except Exception as e:
-        logger.warning(f"[WindowsScanner] 注册表扫描失败: {e}", exc_info=True)
+        logger.warning(f"[WindowsScanner] Quét registry thất bại: {e}", exc_info=True)
 
     # 3. 添加常见的系统应用（只保留用户常用的）
     system_apps = [
@@ -94,7 +94,7 @@ def scan_installed_applications() -> List[Dict[str, str]]:
     apps.extend(system_apps)
 
     logger.info(
-        f"[WindowsScanner] Windows应用扫描完成，总共找到 {len(apps)} 个主要应用程序"
+        f"[WindowsScanner] Quét ứng dụng Windows hoàn tất, tổng cộng tìm thấy {len(apps)} ứng dụng chính"
     )
     return apps
 
@@ -146,11 +146,11 @@ def scan_running_applications() -> List[Dict[str, str]]:
                 except (ValueError, IndexError):
                     continue
 
-        logger.info(f"[WindowsScanner] 找到 {len(apps)} 个正在运行的应用程序")
+        logger.info(f"[WindowsScanner] Tìm thấy {len(apps)} ứng dụng đang chạy")
         return apps
 
     except Exception as e:
-        logger.error(f"[WindowsScanner] 扫描运行应用失败: {e}", exc_info=True)
+        logger.error(f"[WindowsScanner] Quét ứng dụng đang chạy thất bại: {e}", exc_info=True)
         return []
 
 
@@ -206,11 +206,11 @@ def _scan_main_start_menu_apps() -> List[Dict[str, str]]:
 
                             except Exception as e:
                                 logger.debug(
-                                    f"[WindowsScanner] 处理快捷方式失败 {file}: {e}"
+                                    f"[WindowsScanner] Xử lý shortcut thất bại {file}: {e}"
                                 )
 
             except Exception as e:
-                logger.debug(f"[WindowsScanner] 扫描开始菜单失败 {start_path}: {e}")
+                logger.debug(f"[WindowsScanner] Quét Start Menu thất bại {start_path}: {e}")
 
     return apps
 
@@ -256,10 +256,10 @@ def _scan_main_registry_apps() -> List[Dict[str, str]]:
                         )
 
             except json.JSONDecodeError:
-                logger.warning("[WindowsScanner] 无法解析PowerShell输出")
+                logger.warning("[WindowsScanner] Không thể phân tích output của PowerShell")
 
     except (subprocess.TimeoutExpired, subprocess.SubprocessError) as e:
-        logger.warning(f"[WindowsScanner] PowerShell扫描失败: {e}", exc_info=True)
+        logger.warning(f"[WindowsScanner] Quét qua PowerShell thất bại: {e}", exc_info=True)
 
     return apps
 
@@ -521,9 +521,9 @@ def _resolve_shortcut_target(shortcut_path: str) -> Optional[str]:
             return target_path
 
     except ImportError:
-        logger.debug("[WindowsScanner] win32com模块不可用，无法解析快捷方式")
+        logger.debug("[WindowsScanner] Module win32com không khả dụng, không thể phân tích shortcut")
     except Exception as e:
-        logger.debug(f"[WindowsScanner] 解析快捷方式失败: {e}")
+        logger.debug(f"[WindowsScanner] Phân tích shortcut thất bại: {e}")
 
     return None
 
